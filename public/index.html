@@ -1,0 +1,52 @@
+<!doctype html> 
+<html lang="en"> 
+	<head> 
+		<meta charset="UTF-8" />
+	    <title>Bird Game - Sign In</title>
+
+	    <!-- Adding Firebase -->
+		<script src="https://www.gstatic.com/firebasejs/3.6.9/firebase.js"></script>
+		<script>
+		  // Initialize Firebase
+		  var config = {
+		    apiKey: "AIzaSyCnGdZV39hgow--2Yev49Fvt3gS_lcMcxs",
+		    authDomain: "birdgame-aea72.firebaseapp.com",
+		    databaseURL: "https://birdgame-aea72.firebaseio.com",
+		    storageBucket: "birdgame-aea72.appspot.com",
+		    messagingSenderId: "229376271005"
+		  };
+		  firebase.initializeApp(config);
+		</script>
+
+	    <!-- Authentication via FirebaseUI Auth -->
+	    <script src="https://cdn.firebase.com/libs/firebaseui/1.0.0/firebaseui.js"></script>
+		<link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/1.0.0/firebaseui.css" />
+
+		<script type="text/javascript">
+	      // FirebaseUI config.
+	      var uiConfig = {
+	        signInSuccessUrl: 'game.html',
+	        signInOptions: [
+	          // Add lines as needed for the providers you want to offer your users.
+	          firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+	          firebase.auth.EmailAuthProvider.PROVIDER_ID
+	        ]
+	      };
+
+	      // Initialize the FirebaseUI Widget using Firebase.
+	      var ui = new firebaseui.auth.AuthUI(firebase.auth());
+	      // The start method will wait until the DOM is loaded.
+	      ui.start('#firebaseui-auth-container', uiConfig);
+	    </script>
+
+	</head>
+	<body>
+		<!-- <script type="text/javascript">
+			var firebase = require('firebase');
+			var firebaseui = require('firebaseui');
+		</script> -->
+
+		<h1>Please Sign In</h1>
+    	<div id="firebaseui-auth-container"></div>
+	</body>
+</html>
