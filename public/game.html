@@ -16,68 +16,133 @@
 		    messagingSenderId: "229376271005"
 		  };
 		  firebase.initializeApp(config);
+
+		  var database = firebase.database();
 		</script>
 
 		<script type="text/javascript">
-	      initApp = function() {
-	        firebase.auth().onAuthStateChanged(function(user) {
-	          if (user) {
-	            // User is signed in.
-	            var displayName = user.displayName;
-	            var email = user.email;
-	            var emailVerified = user.emailVerified;
-	            var photoURL = user.photoURL;
-	            var uid = user.uid;
-	            var providerData = user.providerData;
-	            user.getToken().then(function(accessToken) {
-	              // document.getElementById('sign-in-status').textContent = 'Signed in';
-	              document.getElementById('sign-out').textContent = 'Sign out';
-	              // document.getElementById('account-details').textContent = JSON.stringify({
-	              //   displayName: displayName,
-	              //   email: email,
-	              //   emailVerified: emailVerified,
-	              //   photoURL: photoURL,
-	              //   uid: uid,
-	              //   accessToken: accessToken,
-	              //   providerData: providerData
-	              // }, null, '  ');
-	            });
-	          } else {
-	            // User is signed out.
-	            // document.getElementById('sign-in-status').textContent = 'Signed out';
-	            // document.getElementById('sign-in').textContent = 'Sign in';
-	            // document.getElementById('account-details').textContent = 'null';
-	          }
-	        }, function(error) {
-	          console.log(error);
-	        });
-	      };
 
-	      window.addEventListener('load', function() {
-	        initApp()
-	      });
 	    </script>
 
 		<!-- Game engine -->
 		<script type="text/javascript" src="js/phaser.min.js"></script>
+
+		<!-- TODO: this may be unnecessary -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 	</head>
 	<body>
 		<h1>Welcome to the Bird Game :D</h1>
-	    <div id="sign-out"></div>
+		<!-- TODO: we don't handle case where sign in fails -->
+	    <div id="sign-out">Sign Out</div>
+	    <div id="add">Add Point</div>
+	    <div id="remove">Remove Point</div>
+	    <div id="score"></div>
 		<img height="1000px" src="fake-news-01.png"></img>
 
 		<script type="text/javascript">
-			var signOutButton = document.getElementById('sign-out');
+		var score; 
+		var uid;
 
-			signOutButton.style.cursor = 'pointer';
-			signOutButton.onclick = function() {
-			    firebase.auth().signOut().then(function() {
-			    	window.location.href = "index.html";
-				}, function(error) {
-				  alert("Sign Out Error");
-				  console.error('Sign Out Error', error);
-				});
+		// initApp gets score and uid from database, displays score
+		initApp = function() {
+	        firebase.auth().onAuthStateChanged(function(user) {
+	          if (user) {
+	            // User is signed in. TODO: how much of this info do we actually need?
+	            var displayName = user.displayName;
+	            var email = user.email;
+	            var emailVerified = user.emailVerified;
+	            var photoURL = user.photoURL;
+	            uid = user.uid;
+
+	            var providerData = user.providerData;
+	            user.getToken().then(function(accessToken) {
+	              // TODO: clean this code up
+	              // Check if user exists (aka if not first time) 
+	              var usersRef = firebase.database().ref('/users/');
+	              usersRef.once('value').then(function(snapshot) {
+	              	var scoreElement = document.getElementById('score');
+	              	if (snapshot.child(uid).exists()) {
+	              		// User exists, so get score, and set score accordingly
+	              		firebase.database().ref('/users/' + uid).once('value').then(function(snapshot) {
+		              		score = snapshot.val().score;
+		              		scoreElement.textContent = score;
+		              	});
+	              	}
+	              	else {
+	              		// User doesn't exist, so create new node with uid, and set score to 0
+	              		firebase.database().ref('users/' + uid).set({
+					    	score: 0
+					 	});
+					 	score = 0;
+					 	scoreElement.textContent = "0";
+	              	}
+				  });
+	            });
+	          } else {
+	            console.log("USER IS SIGNED OUT");
+	          }
+	        }, function(error) {
+	          console.log(error);
+	        });
+	    };
+
+	    signOut = function() {
+		    firebase.auth().signOut().then(function() {
+		    	window.location.href = "index.html";
+			}, function(error) {
+			  alert("Sign Out Error");
+			  console.error('Sign Out Error', error);
+			});
+		};
+
+		addPoint = function() {
+			score = score + 1;
+
+	  		var newData = {
+				score: score 
 			};
+
+			var updates = {};
+			updates['/users/' + uid] = newData;
+
+			firebase.database().ref().update(updates);
+			document.getElementById('score').textContent = score;
+		};
+
+		removePoint = function() {
+			score = score - 1;
+
+	  		var newData = {
+				score: score 
+			};
+
+			var updates = {};
+			updates['/users/' + uid] = newData;
+
+			firebase.database().ref().update(updates);
+			document.getElementById('score').textContent = score;
+		};
+
+		//Sign out button signs user out and redirects to login page
+		var signOutButton = document.getElementById('sign-out');
+		signOutButton.style.cursor = 'pointer';
+		signOutButton.onclick = signOut;
+
+
+		//Add 1 to score
+		var addButton = document.getElementById('add');
+		addButton.style.cursor = 'pointer';
+		addButton.onclick = addPoint;
+
+		//Remove 1 from score
+		var removeButton = document.getElementById('remove');
+		removeButton.style.cursor = 'pointer';
+		removeButton.onclick = removePoint;
+
+	    window.addEventListener('load', function() {
+	        initApp()
+	    });
+
 		</script>
 	</body>
 </html>
