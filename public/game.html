@@ -34,14 +34,15 @@
 		<h1>Welcome to the Bird Game :D</h1>
 		<!-- TODO: we don't handle case where sign in fails -->
 	    <div id="sign-out">Sign Out</div>
-	    <div id="add">Add Point</div>
-	    <div id="remove">Remove Point</div>
 	    <div id="score"></div>
-		<img height="1000px" src="fake-news-01.png"></img>
+		<div id="game"></div>
 
 		<script type="text/javascript">
 		var score; 
 		var uid;
+		var switchArticle = true;
+		var articles;
+		var activeArticle;
 
 		// initApp gets score and uid from database, displays score
 		initApp = function() {
@@ -60,12 +61,10 @@
 	              // Check if user exists (aka if not first time) 
 	              var usersRef = firebase.database().ref('/users/');
 	              usersRef.once('value').then(function(snapshot) {
-	              	var scoreElement = document.getElementById('score');
 	              	if (snapshot.child(uid).exists()) {
 	              		// User exists, so get score, and set score accordingly
 	              		firebase.database().ref('/users/' + uid).once('value').then(function(snapshot) {
 		              		score = snapshot.val().score;
-		              		scoreElement.textContent = score;
 		              	});
 	              	}
 	              	else {
@@ -74,7 +73,6 @@
 					    	score: 0
 					 	});
 					 	score = 0;
-					 	scoreElement.textContent = "0";
 	              	}
 				  });
 	            });
@@ -84,6 +82,10 @@
 	        }, function(error) {
 	          console.log(error);
 	        });
+
+	        firebase.database().ref('/articles').once('value').then(function(snapshot) {
+		        articles = snapshot.val();
+		    });
 	    };
 
 	    signOut = function() {
@@ -95,10 +97,68 @@
 			});
 		};
 
-		addPoint = function() {
-			score = score + 1;
+	    var game = new Phaser.Game(800, 800, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
+	    var scoreLoaded = false;
 
-	  		var newData = {
+	    function preload() {
+		    game.load.image('yesButton','assets/yesButton.jpg');
+		    game.load.image('noButton','assets/noButton.jpg');
+
+		    game.load.image('someName','assets/0.png');
+		    game.load.image('another','assets/1.jpeg');
+		    game.load.image('lol','assets/2.jpg');
+
+		}
+
+		function create() {
+			game.stage.backgroundColor = '#ADD8E6';
+
+			var noButton = game.add.button(715, 0, 'noButton', noClicked, this);
+			noButton.scale.setTo(.2, .2);
+
+			var yesButton = game.add.button(625, 0, 'yesButton', yesClicked, this);
+			yesButton.scale.setTo(.2, .2);
+		}
+
+		function update() {
+			// TODO: is there a better fix? currently can't set scoreText initially in create because calls to Firebase
+			// may not have returned to get the score, so Score: Undefined is printed 
+			if (!scoreLoaded && score) {
+				scoreLoaded = true;
+				scoreText = game.add.text(16, 16, 'Score: ' + score, { fontSize: '32px', fill: '#000' });
+			}
+
+			if (switchArticle && articles && articles.length != 0) {
+				// Article at index 0 will be this article until user clicks yesButton, or noButton, 
+				// after which switchArticle is set to true, score is updated, and article at index 0 is removed
+				activeArticle = game.add.sprite(100, 100, articles[0]['name']);
+				activeArticle.scale.setTo(.2, .2);
+				switchArticle = false;
+			}
+		}
+
+		function nextArticle() {
+			activeArticle.destroy();
+			articles.splice(0,1); 
+			switchArticle = true;
+		}
+
+		function determineScore(userChosen) {
+			var correct = articles[0]['answer'];
+			if (correct == 'fake' && userChosen == 'fake') {
+				alert("CORRECT!");
+				return score + 1;
+			}
+			if (correct == 'real' && userChosen == 'real') {
+				alert("CORRECT!");
+				return score + 1;
+			}
+			alert("WRONG!");
+			return score - 1;
+		}
+
+		function updateScore() {
+			var newData = {
 				score: score 
 			};
 
@@ -106,38 +166,29 @@
 			updates['/users/' + uid] = newData;
 
 			firebase.database().ref().update(updates);
-			document.getElementById('score').textContent = score;
-		};
+			scoreText.text = 'Score: ' + score;
+		}
 
-		removePoint = function() {
-			score = score - 1;
+		function yesClicked(button) {
+			score = determineScore('real');
 
-	  		var newData = {
-				score: score 
-			};
+			updateScore();
 
-			var updates = {};
-			updates['/users/' + uid] = newData;
+			nextArticle();
+		}
 
-			firebase.database().ref().update(updates);
-			document.getElementById('score').textContent = score;
-		};
+		function noClicked(button) {
+			score = determineScore('fake');
+
+	  		updateScore();
+
+			nextArticle();
+		}
 
 		//Sign out button signs user out and redirects to login page
 		var signOutButton = document.getElementById('sign-out');
 		signOutButton.style.cursor = 'pointer';
 		signOutButton.onclick = signOut;
-
-
-		//Add 1 to score
-		var addButton = document.getElementById('add');
-		addButton.style.cursor = 'pointer';
-		addButton.onclick = addPoint;
-
-		//Remove 1 from score
-		var removeButton = document.getElementById('remove');
-		removeButton.style.cursor = 'pointer';
-		removeButton.onclick = removePoint;
 
 	    window.addEventListener('load', function() {
 	        initApp()
