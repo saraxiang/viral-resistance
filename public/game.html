@@ -4,6 +4,9 @@
 		<meta charset="UTF-8" />
 	    <title>Bird Game</title>
 
+	    <!-- Style for some DOM elements -->
+	    <link rel="stylesheet" type="text/css" href="style.css"/>
+
 	    <!-- Adding Firebase -->
 		<script src="https://www.gstatic.com/firebasejs/3.6.9/firebase.js"></script>
 		<script>
@@ -31,11 +34,23 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 	</head>
 	<body>
-		<h1>Welcome to the Bird Game :D</h1>
+		<h1>Viral Resistance</h1>
 		<!-- TODO: we don't handle case where sign in fails -->
 	    <div id="sign-out">Sign Out</div>
-	    <div id="score"></div>
 		<div id="game"></div>
+		<div id="article">
+			<div id="url-box"> </div>
+			<div id="top-bar"> </div>
+			<div id="header-image"></div>
+			<div id="body">
+			  <div  id="author-picture"> </div>
+			  <h3 id="author-info"> 
+			  </h3>
+			  <p id="p1"></p>
+			  <div  id="quote"> </div>
+			  <p id="p2"></p>
+			</div>
+		</div>
 
 		<script type="text/javascript">
 		var score; 
@@ -97,26 +112,21 @@
 			});
 		};
 
-	    var game = new Phaser.Game(800, 800, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
+	    var game = new Phaser.Game(1600, 800, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
 	    var scoreLoaded = false;
 
 	    function preload() {
 		    game.load.image('yesButton','assets/yesButton.jpg');
 		    game.load.image('noButton','assets/noButton.jpg');
-
-		    game.load.image('someName','assets/0.png');
-		    game.load.image('another','assets/1.jpeg');
-		    game.load.image('lol','assets/2.jpg');
-
 		}
 
 		function create() {
 			game.stage.backgroundColor = '#ADD8E6';
 
-			var noButton = game.add.button(715, 0, 'noButton', noClicked, this);
+			var noButton = game.add.button(100, 50, 'noButton', noClicked, this);
 			noButton.scale.setTo(.2, .2);
 
-			var yesButton = game.add.button(625, 0, 'yesButton', yesClicked, this);
+			var yesButton = game.add.button(0, 50, 'yesButton', yesClicked, this);
 			yesButton.scale.setTo(.2, .2);
 		}
 
@@ -131,14 +141,40 @@
 			if (switchArticle && articles && articles.length != 0) {
 				// Article at index 0 will be this article until user clicks yesButton, or noButton, 
 				// after which switchArticle is set to true, score is updated, and article at index 0 is removed
-				activeArticle = game.add.sprite(100, 100, articles[0]['name']);
-				activeArticle.scale.setTo(.2, .2);
+
+				// TODO: load new article
+				var templateUsed = articles[0]['template']['num'];
+				if (templateUsed == 0) loadTemplate0();
 				switchArticle = false;
 			}
 		}
 
+		function loadTemplate0() {
+			var p1Text = articles[0]['template']['p1'];
+			var p1Node = document.getElementById('p1');
+			p1Node.innerHTML = p1Text;
+
+			var p2Text = articles[0]['template']['p2'];
+			var p2Node = document.getElementById('p2');
+			p2Node.innerHTML = p2Text;
+
+			var authorInfoText = articles[0]['template']['author'] + '<br>' + articles[0]['template']['authorTitle'];
+			var authorInfoNode = document.getElementById('author-info');
+			authorInfoNode.innerHTML = authorInfoText;
+
+			// var headerImageUrl = '<div id="header-image" style="background-image: url("assets/someName.jpg");"></div>'
+			// var headerImageUrl = '<div id="header-image" style="height: 200px;background-size: cover;background-repeat: no-repeat;background-image: url("someName.jpg");"></div>';
+			// var headerImageNode = document.getElementById('header-wrapper');
+			// headerImageNode.innerHTML = headerImageUrl;
+
+			// var newDiv = document.createElement("header-image"); 
+			// var body = document.getElementById("body"); 
+ 		// 	document.body.insertBefore(newDiv, body); 
+			// var i = document.createElement('div');
+		}
+
 		function nextArticle() {
-			activeArticle.destroy();
+			// TODO: remove current article
 			articles.splice(0,1); 
 			switchArticle = true;
 		}
