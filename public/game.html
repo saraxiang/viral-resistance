@@ -59,17 +59,19 @@
 	  	</div>
 
 		<script type="text/javascript">
-		var score; 
+		// var switchArticle = true;
 		var uid;
-		var switchArticle = true;
-		var articles;
-		var activeArticle;
-		var askQuestions = false;
-		var switchQuestion = true;
-		var prompts;
-		var choices;
-		var numQuestions;
-		var questionsCount;
+		var articles;	//defined in initApp, pulled from database
+		var states; //defined in initApp, pulled from database
+
+		// These variables define a player's view of the game
+		var stateArray; //defined in initApp, either pulled from database or set to  [0, 1, 2, 3] (for new players)
+		var currentState; //defined in initApp, either pulled from database or set to {loadedAssets:false} (for new players)
+		var score; //defined in initApp, either pulled from database or set to 0 (for new players)
+		// TODO: implement evidence and leads
+		var evidence; //defined in initApp, either pulled from database or set to [] (for new players)
+		var leads;	//defined in initApp, either pulled from database or set to [] (for new players)
+
 
 		// initApp gets score and uid from database, displays score
 		initApp = function() {
@@ -91,14 +93,20 @@
 	              	if (snapshot.child(uid).exists()) {
 	              		// User exists, so get score, and set score accordingly
 	              		firebase.database().ref('/users/' + uid).once('value').then(function(snapshot) {
+	              			stateArray = snapshot.val().stateArray;
+	              			currentState = snapshot.val().currentState;
 		              		score = snapshot.val().score;
 		              	});
 	              	}
 	              	else {
 	              		// User doesn't exist, so create new node with uid, and set score to 0
 	              		firebase.database().ref('users/' + uid).set({
+	              			stateArray: [0,1,2,3],
+	              			currentState: {loadedAssets:false},
 					    	score: 0
 					 	});
+					 	stateArray = [0,1,2,3];
+					 	currentState = {loadedAssets:false};
 					 	score = 0;
 	              	}
 				  });
@@ -113,6 +121,10 @@
 	        firebase.database().ref('/articles').once('value').then(function(snapshot) {
 		        articles = snapshot.val();
 		    });
+
+		    firebase.database().ref('/states').once('value').then(function(snapshot) {
+		    	states = snapshot.val();
+			});
 	    };
 
 	    signOut = function() {
@@ -125,62 +137,141 @@
 		};
 
 	    var game = new Phaser.Game(1600, 800, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
-	    var scoreLoaded = false;
+	    var databaseLoaded = false;
 
 	    function preload() {
-		    game.load.image('yesButton','assets/yesButton.jpg');
-		    game.load.image('noButton','assets/noButton.jpg');
+		    // game.load.image('yesButton','assets/yesButton.jpg');
+		    // game.load.image('noButton','assets/noButton.jpg');
+		    game.load.image('nextButton', 'assets/next.png');
+		    game.load.image('outerImage', 'assets/outer.jpg');
 		}
 
 		function create() {
 			game.stage.backgroundColor = '#ADD8E6';
-
-			var noButton = game.add.button(100, 50, 'noButton', noClicked, this);
-			noButton.scale.setTo(.2, .2);
-
-			var yesButton = game.add.button(0, 50, 'yesButton', yesClicked, this);
-			yesButton.scale.setTo(.2, .2);
 		}
 
 		function update() {
-			// TODO: is there a better fix? currently can't set scoreText initially in create because calls to Firebase
-			// may not have returned to get the score, so Score: Undefined is printed 
-			if (!scoreLoaded && score) {
-				scoreLoaded = true;
+			// checking that database has been accessed and all variables have been filled as needed before proceeding
+			if (!databaseLoaded && stateArray && currentState) {
+				databaseLoaded = true;
 				scoreText = game.add.text(16, 16, 'Score: ' + score, { fontSize: '32px', fill: '#000' });
 			}
+			else if (databaseLoaded) { 
+				// TODO: stateArray should never be empty, catch and raise error if this is the case
 
-			if (switchArticle && articles && articles.length != 0) {
-				// Article at index 0 will be this article until user clicks yesButton, or noButton, 
-				// after which switchArticle is set to true, score is updated, and article at index 0 is removed
+				var currentStateId = stateArray[0];
+				var currentStateType = states[currentStateId]['type'];
 
-				// TODO: load new article
-				var templateUsed = articles[0]['template']['num'];
-				if (templateUsed == 0) loadTemplate0();
-				switchArticle = false;
-			}
-
-			// Once user choice detected, switchQuestion because true again. 
-			// Once submit button is clicked, askQuestions becomes false 
-			if (askQuestions && switchQuestion) {
-				var form = document.getElementById('form');
-				var optionsArray = choices[questionsCount];
-				var optionNum;
-				var optionsHTML = "";
-				for (optionNum = 0; optionNum < optionsArray.length; optionNum++) {
-					optionsHTML  += '<div class="input-container"><input id="' + optionNum + '" class="radio-button" type="radio" name="radio" value ="' + optionsArray[optionNum] + '"/><div class="radio-tile"><label for="' + optionNum + '" class="radio-tile-label">' + optionsArray[optionNum] + '</label></div></div>'
+				if (currentStateType == 'start') {
+					handleStart();
 				}
-			 	form.innerHTML = optionsHTML
-				questionsCount++;
-				switchQuestion = false;
 
-				// catches if user selects form option
-				$('#form input').on('change', function() {
-					console.log("gotit");
-					switchQuestion = true;
-					if (questionsCount == numQuestions) askQuestions = false;
-				    // alert($('input[name=radio]:checked', '#form').val()); 
-				});
+				if (currentStateType == 'outer') {
+					handleOuter();
+				}
+
+				if (currentStateType == 'inner') {
+					handleInner();
+				}
+			}
+		}
+
+		function updateCurrentState (x, y) {
+			// TODO: clean up this function
+			// update variable
+			var key = arguments[0];
+			var value = arguments[1];
+
+			currentState[key] = value;
+			//update database
+			var update = currentState;
+			var updates = {};
+			updates['/users/' + uid + '/currentState/'] = update;
+			firebase.database().ref().update(updates);
+		}
+
+		function nextState() {
+			//update stateArray(remove element at index 0)
+			stateArray.splice(0,1);
+			//clear current state and set loadedAssets to false
+			currentState = {loadedAssets: false};
+		}
+		function handleStart() {
+			if (currentState['loadedAssets'] == false) {
+				var nextButton = game.add.button(0, 50, 'nextButton', nextState, this);
+				nextButton.scale.setTo(.2, .2);
+
+				updateCurrentState('loadedAssets', true);
+			}
+		}
+
+		function handleOuter() {
+			if (currentState['loadedAssets'] == false) {
+				console.log("loading assets for outer");
+				var nextButton = game.add.button(0, 50, 'nextButton', nextState, this);
+				nextButton.scale.setTo(.2, .2);
+
+				game.add.sprite(200, 200, 'outerImage');
+
+				updateCurrentState('loadedAssets', true);
+			}
+		}
+
+		function handleInner() {
+			if (currentState['loadedAssets'] == false) {
+
+				var nextButton = game.add.button(0, 50, 'nextButton', nextState, this);
+				nextButton.scale.setTo(.2, .2);
+
+				// Note that if we don't want to load article (or ask questions, etc) immediately or at all we can definitely do that
+				// Just add a variable in database, and act different based on it
+				updateCurrentState('loadArticle', true);
+				updateCurrentState('loadedArticle', false);
+				updateCurrentState('askQuestions', true);
+				updateCurrentState('switchQuestion', true);
+
+				var currentStateId = stateArray[0];
+				var articleId = states[currentStateId]['article'];
+
+				updateCurrentState('prompts', articles[articleId]['questions']['prompt']);
+				updateCurrentState('choices', articles[articleId]['questions']['choices']);
+				updateCurrentState('numQuestions', currentState['prompts'].length);
+				updateCurrentState('questionsCount', 0);				
+
+				updateCurrentState('loadedAssets', true);
+			}
+			else {
+				//relying on short-circuit evaluation: if we want to load and article and if it hasn't already been loaded, then load
+				if (currentState['loadArticle'] && currentState['loadedArticle'] == false) {
+					var currentStateId = stateArray[0];
+					var articleId = states[currentStateId]['article'];
+					var templateUsed = articles[articleId]['template']['num'];
+					if (templateUsed == 0) loadTemplate0();
+					updateCurrentState('loadedArticle', true);
+				}
+
+				// Once user choice detected, switchQuestion because true again. 
+				// Once submit button is clicked, askQuestions becomes false 
+				if (currentState['askQuestions'] && currentState['switchQuestion']) {
+					var form = document.getElementById('form');
+					var optionsArray = currentState['choices'][currentState['questionsCount']];
+					var optionNum;
+					var optionsHTML = "";
+					for (optionNum = 0; optionNum < optionsArray.length; optionNum++) {
+						optionsHTML  += '<div class="input-container"><input id="' + optionNum + '" class="radio-button" type="radio" name="radio" value ="' + optionsArray[optionNum] + '"/><div class="radio-tile"><label for="' + optionNum + '" class="radio-tile-label">' + optionsArray[optionNum] + '</label></div></div>'
+					}
+				 	form.innerHTML = optionsHTML
+					updateCurrentState('questionsCount', currentState['questionsCount'] + 1);
+					updateCurrentState('switchQuestion', false);
+
+					// catches if user selects form option
+					$('#form input').on('change', function() {
+						console.log("gotit");
+						updateCurrentState('switchQuestion', true);
+						if (currentState['questionsCount'] == currentState['numQuestions']) updateCurrentState('askQuestions', false);
+					    // alert($('input[name=radio]:checked', '#form').val()); 
+					});
+				}
 			}
 		}
 
@@ -199,13 +290,6 @@
 			var authorInfoText = articles[0]['template']['author'] + '<br>' + articles[0]['template']['authorTitle'];
 			var authorInfoNode = document.getElementById('author-info');
 			authorInfoNode.innerHTML = authorInfoText;
-
-			askQuestions = true;
-			prompts = articles[0]['questions']['prompt'];
-			choices = articles[0]['questions']['choices'];
-			numQuestions = prompts.length;
-			questionsCount = 0;
-
 			// var headerImageUrl = '<div id="header-image" style="background-image: url("assets/someName.jpg");"></div>'
 			// var headerImageUrl = '<div id="header-image" style="height: 200px;background-size: cover;background-repeat: no-repeat;background-image: url("someName.jpg");"></div>';
 			// var headerImageNode = document.getElementById('header-wrapper');
@@ -217,54 +301,54 @@
 			// var i = document.createElement('div');
 		}
 
-		function nextArticle() {
-			var article = document.getElementById('article');
-			article.style.display = 'none';
-			articles.splice(0,1); 
-			switchArticle = true;
-		}
+		// function determineScore(userChosen) {
+		// 	var correct = articles[0]['answer'];
+		// 	if (correct == 'fake' && userChosen == 'fake') {
+		// 		alert("CORRECT!");
+		// 		return score + 1;
+		// 	}
+		// 	if (correct == 'real' && userChosen == 'real') {
+		// 		alert("CORRECT!");
+		// 		return score + 1;
+		// 	}
+		// 	alert("WRONG!");
+		// 	return score - 1;
+		// }
 
-		function determineScore(userChosen) {
-			var correct = articles[0]['answer'];
-			if (correct == 'fake' && userChosen == 'fake') {
-				alert("CORRECT!");
-				return score + 1;
-			}
-			if (correct == 'real' && userChosen == 'real') {
-				alert("CORRECT!");
-				return score + 1;
-			}
-			alert("WRONG!");
-			return score - 1;
-		}
+		// function updateScore() {
+		// 	var newData = {
+		// 		score: score 
+		// 	};
 
-		function updateScore() {
-			var newData = {
-				score: score 
-			};
+		// 	var updates = {};
+		// 	updates['/users/' + uid] = newData;
 
-			var updates = {};
-			updates['/users/' + uid] = newData;
+		// 	firebase.database().ref().update(updates);
+		// 	scoreText.text = 'Score: ' + score;
+		// }
 
-			firebase.database().ref().update(updates);
-			scoreText.text = 'Score: ' + score;
-		}
+		// function nextArticle() {
+		// 	var article = document.getElementById('article');
+		// 	article.style.display = 'none';
+		// 	articles.splice(0,1); 
+		// 	switchArticle = true;
+		// }
 
-		function yesClicked(button) {
-			score = determineScore('real');
+		// function yesClicked(button) {
+		// 	score = determineScore('real');
 
-			updateScore();
+		// 	updateScore();
 
-			nextArticle();
-		}
+		// 	nextArticle();
+		// }
 
-		function noClicked(button) {
-			score = determineScore('fake');
+		// function noClicked(button) {
+		// 	score = determineScore('fake');
 
-	  		updateScore();
+	 //  		updateScore();
 
-			nextArticle();
-		}
+		// 	nextArticle();
+		// }
 
 		//Sign out button signs user out and redirects to login page
 		var signOutButton = document.getElementById('sign-out');
