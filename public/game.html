@@ -7,6 +7,9 @@
 	    <!-- Style for some DOM elements -->
 	    <link rel="stylesheet" type="text/css" href="style.css"/>
 
+	    <!-- Style via SCSS, mainly for form rn -->
+	    <link rel="stylesheet" type="text/css" href="output.css"/>
+
 	    <!-- Adding Firebase -->
 		<script src="https://www.gstatic.com/firebasejs/3.6.9/firebase.js"></script>
 		<script>
@@ -30,7 +33,7 @@
 		<!-- Game engine -->
 		<script type="text/javascript" src="js/phaser.min.js"></script>
 
-		<!-- TODO: this may be unnecessary -->
+		<!-- Needed for form detection of which radio button is clicked-->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 	</head>
 	<body>
@@ -52,12 +55,21 @@
 			</div>
 		</div>
 
+		<div id="form" class="radio-tile-group">
+	  	</div>
+
 		<script type="text/javascript">
 		var score; 
 		var uid;
 		var switchArticle = true;
 		var articles;
 		var activeArticle;
+		var askQuestions = false;
+		var switchQuestion = true;
+		var prompts;
+		var choices;
+		var numQuestions;
+		var questionsCount;
 
 		// initApp gets score and uid from database, displays score
 		initApp = function() {
@@ -147,9 +159,35 @@
 				if (templateUsed == 0) loadTemplate0();
 				switchArticle = false;
 			}
+
+			// Once user choice detected, switchQuestion because true again. 
+			// Once submit button is clicked, askQuestions becomes false 
+			if (askQuestions && switchQuestion) {
+				var form = document.getElementById('form');
+				var optionsArray = choices[questionsCount];
+				var optionNum;
+				var optionsHTML = "";
+				for (optionNum = 0; optionNum < optionsArray.length; optionNum++) {
+					optionsHTML  += '<div class="input-container"><input id="' + optionNum + '" class="radio-button" type="radio" name="radio" value ="' + optionsArray[optionNum] + '"/><div class="radio-tile"><label for="' + optionNum + '" class="radio-tile-label">' + optionsArray[optionNum] + '</label></div></div>'
+				}
+			 	form.innerHTML = optionsHTML
+				questionsCount++;
+				switchQuestion = false;
+
+				// catches if user selects form option
+				$('#form input').on('change', function() {
+					console.log("gotit");
+					switchQuestion = true;
+					if (questionsCount == numQuestions) askQuestions = false;
+				    // alert($('input[name=radio]:checked', '#form').val()); 
+				});
+			}
 		}
 
 		function loadTemplate0() {
+			var article = document.getElementById('article');
+			article.style.display = 'block';
+
 			var p1Text = articles[0]['template']['p1'];
 			var p1Node = document.getElementById('p1');
 			p1Node.innerHTML = p1Text;
@@ -162,6 +200,12 @@
 			var authorInfoNode = document.getElementById('author-info');
 			authorInfoNode.innerHTML = authorInfoText;
 
+			askQuestions = true;
+			prompts = articles[0]['questions']['prompt'];
+			choices = articles[0]['questions']['choices'];
+			numQuestions = prompts.length;
+			questionsCount = 0;
+
 			// var headerImageUrl = '<div id="header-image" style="background-image: url("assets/someName.jpg");"></div>'
 			// var headerImageUrl = '<div id="header-image" style="height: 200px;background-size: cover;background-repeat: no-repeat;background-image: url("someName.jpg");"></div>';
 			// var headerImageNode = document.getElementById('header-wrapper');
@@ -169,12 +213,13 @@
 
 			// var newDiv = document.createElement("header-image"); 
 			// var body = document.getElementById("body"); 
- 		// 	document.body.insertBefore(newDiv, body); 
+ 			// 	document.body.insertBefore(newDiv, body); 
 			// var i = document.createElement('div');
 		}
 
 		function nextArticle() {
-			// TODO: remove current article
+			var article = document.getElementById('article');
+			article.style.display = 'none';
 			articles.splice(0,1); 
 			switchArticle = true;
 		}
