@@ -74,7 +74,8 @@
 		var leads;	//defined in initApp, either pulled from database or set to [] (for new players)
 		// TODO: we will likely need a global "userHistory" variable to hold history for each completed state
 
-
+		// This will be defined by handleOuter() and destroyed by nextStateAndDeleteOuter
+		var outerImage;
 		// initApp gets user score, uid, stateArray, currentState from database, or initializes for new users
 		// displays score, logs uid
 		// also initializes states and articles variables
@@ -222,6 +223,16 @@
 			updateCurrentState('loadedAssets', false);
 		}
 
+		function nextStateAndDeleteOuter() {
+			//delete...
+			outerImage.destroy();
+			//update stateArray(remove element at index 0)
+			stateArray.splice(0,1);
+			updateStateArray(stateArray);
+			//clear current state and set loadedAssets to false
+			updateCurrentState('loadedAssets', false);
+		}
+
 		function handleStart() {
 			if (currentState['loadedAssets'] == false) {
 				var nextButton = game.add.button(0, 50, 'nextButton', nextState, this);
@@ -233,10 +244,10 @@
 
 		function handleOuter() {
 			if (currentState['loadedAssets'] == false) {
-				var nextButton = game.add.button(0, 50, 'nextButton', nextState, this);
-				nextButton.scale.setTo(.2, .2);
+				outerImage = game.add.sprite(200, 200, 'outerImage');
 
-				game.add.sprite(200, 200, 'outerImage');
+				var nextButton = game.add.button(0, 50, 'nextButton', nextStateAndDeleteOuter, this);
+				nextButton.scale.setTo(.2, .2);
 
 				updateCurrentState('loadedAssets', true);
 			}
