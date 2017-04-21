@@ -159,6 +159,7 @@
 		    // game.load.image('noButton','assets/noButton.jpg');
 		    game.load.image('nextButton', 'assets/next.png');
 		    game.load.image('outerImage', 'assets/outer.jpg');
+		    game.load.image('endImage', 'assets/end.jpg');
 		}
 
 		function create() {
@@ -191,6 +192,11 @@
 				if (currentStateType == 'inner') {
 					console.log("In Inner Loop");
 					handleInner();
+				}
+
+				if (currentStateType == 'end') {
+					console.log("Finished!");
+					handleEnd();
 				}
 			}
 		}
@@ -241,8 +247,10 @@
 		async function innerStateHandleUserSelection() {
 		  await sleep(300);
 		  updateCurrentState('switchQuestion', true);
-		  if (currentState['questionsCount'] == currentState['numQuestions'])
+		  if (currentState['questionsCount'] == currentState['numQuestions']) {
 		  	updateCurrentState('askQuestions', false);
+		  	deleteArticleAndForm();
+		  }
 		}
 
 		function handleStart() {
@@ -309,24 +317,44 @@
 				// Once user choice detected, switchQuestion because true again. 
 				// Once submit button is clicked, askQuestions becomes false 
 				if (currentState['askQuestions'] && currentState['switchQuestion']) {
-					var form = document.getElementById('form');
-					var optionsArray = currentState['choices'][currentState['questionsCount']];
-					var optionNum;
-					var optionsHTML = "";
-					for (optionNum = 0; optionNum < optionsArray.length; optionNum++) {
-						optionsHTML  += '<div class="input-container"><input id="' + optionNum + '" class="radio-button" type="radio" name="radio" value ="' + optionsArray[optionNum] + '"/><div class="radio-tile"><label for="' + optionNum + '" class="radio-tile-label">' + optionsArray[optionNum] + '</label></div></div>'
-					}
-				 	form.innerHTML = optionsHTML
-					updateCurrentState('questionsCount', currentState['questionsCount'] + 1);
-					updateCurrentState('switchQuestion', false);
-
-					// catches if user selects form option
-					$('#form input').on('change', function() {
-						console.log("gotit");
-						innerStateHandleUserSelection();
-					});
+					loadForm();
 				}
 			}
+		}
+
+		function handleEnd() {
+			if (currentState['loadedAssets'] == false) {
+				var endImage = game.add.sprite(200, 200, 'endImage');
+				endImage.scale.setTo(.2,.2);
+				updateCurrentState('loadedAssets', true);
+			}
+		}
+
+		function deleteArticleAndForm() {
+			var article = document.getElementById('article');
+			var form = document.getElementById('form');
+			form.innerHTML = '';
+			article.innerHTML = '<div id="url-box"></div><div id="top-bar"> </div><div id="header-image"></div><div id="body"><div  id="author-picture"> </div><h3 id="author-info"> </h3><p id="p1"></p><div  id="quote"> </div><p id="p2"></p></div>'
+			article.style.display = 'none';
+		}
+
+		function loadForm() {
+			var form = document.getElementById('form');
+			var optionsArray = currentState['choices'][currentState['questionsCount']];
+			var optionNum;
+			var optionsHTML = "";
+			for (optionNum = 0; optionNum < optionsArray.length; optionNum++) {
+				optionsHTML  += '<div class="input-container"><input id="' + optionNum + '" class="radio-button" type="radio" name="radio" value ="' + optionsArray[optionNum] + '"/><div class="radio-tile"><label for="' + optionNum + '" class="radio-tile-label">' + optionsArray[optionNum] + '</label></div></div>'
+			}
+		 	form.innerHTML = optionsHTML;
+			updateCurrentState('questionsCount', currentState['questionsCount'] + 1);
+			updateCurrentState('switchQuestion', false);
+
+			// catches if user selects form option
+			$('#form input').on('change', function() {
+				console.log("gotit");
+				innerStateHandleUserSelection();
+			});
 		}
 
 		function loadTemplate0() {
