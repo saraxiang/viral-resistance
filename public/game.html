@@ -61,8 +61,8 @@
 		<script type="text/javascript">
 		// var switchArticle = true;
 		var uid;
-		var articles;	//defined in initApp, pulled from database
-		var states; //defined in initApp, pulled from database
+		var articles;  //defined in initApp, pulled from database
+		var states;  //defined in initApp, pulled from database
 
 		// These variables define a player's view of the game
 		var stateArray; //defined in initApp, either pulled from database or set to  [0, 1, 2, 3] (for new players)
@@ -71,9 +71,12 @@
 		// TODO: implement evidence and leads
 		var evidence; //defined in initApp, either pulled from database or set to [] (for new players)
 		var leads;	//defined in initApp, either pulled from database or set to [] (for new players)
+		// TODO: we will likely need a global "userHistory" variable to hold history for each completed state
 
 
-		// initApp gets score and uid from database, displays score
+		// initApp gets user score, uid, stateArray, currentState from database, or initializes for new users
+		// displays score, logs uid
+		// also initializes states and articles variables
 		initApp = function() {
 	        firebase.auth().onAuthStateChanged(function(user) {
 	          if (user) {
@@ -83,6 +86,7 @@
 	            var emailVerified = user.emailVerified;
 	            var photoURL = user.photoURL;
 	            uid = user.uid;
+	            console.log("uid is: " + uid);
 
 	            var providerData = user.providerData;
 	            user.getToken().then(function(accessToken) {
@@ -153,6 +157,7 @@
 		function update() {
 			// checking that database has been accessed and all variables have been filled as needed before proceeding
 			if (!databaseLoaded && stateArray && currentState) {
+				currentState['loadedAssets'] = false;
 				databaseLoaded = true;
 				scoreText = game.add.text(16, 16, 'Score: ' + score, { fontSize: '32px', fill: '#000' });
 			}
@@ -163,14 +168,17 @@
 				var currentStateType = states[currentStateId]['type'];
 
 				if (currentStateType == 'start') {
+					console.log("Starting!");
 					handleStart();
 				}
 
 				if (currentStateType == 'outer') {
+					console.log("In Outer Loop");
 					handleOuter();
 				}
 
 				if (currentStateType == 'inner') {
+					console.log("In Inner Loop");
 					handleInner();
 				}
 			}
@@ -196,6 +204,7 @@
 			//clear current state and set loadedAssets to false
 			currentState = {loadedAssets: false};
 		}
+
 		function handleStart() {
 			if (currentState['loadedAssets'] == false) {
 				var nextButton = game.add.button(0, 50, 'nextButton', nextState, this);
