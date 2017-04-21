@@ -147,6 +147,10 @@
 			window.location.reload();
 		}
 
+		function sleep(ms) {
+		  return new Promise(resolve => setTimeout(resolve, ms));
+		}
+
 	    var game = new Phaser.Game(1600, 800, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
 	    var databaseLoaded = false;
 
@@ -233,6 +237,14 @@
 			updateCurrentState('loadedAssets', false);
 		}
 
+		// Waiting a bit before handling to let the pretty animation happen
+		async function innerStateHandleUserSelection() {
+		  await sleep(300);
+		  updateCurrentState('switchQuestion', true);
+		  if (currentState['questionsCount'] == currentState['numQuestions'])
+		  	updateCurrentState('askQuestions', false);
+		}
+
 		function handleStart() {
 			if (currentState['loadedAssets'] == false) {
 				var nextButton = game.add.button(0, 50, 'nextButton', nextState, this);
@@ -261,14 +273,22 @@
 
 				// Note that if we don't want to load article (or ask questions, etc) immediately or at all we can definitely do that
 				// Just add a variable in database, and act different based on it
+
+				// We want to load an article
 				updateCurrentState('loadArticle', true);
+				// But we haven't yet
 				updateCurrentState('loadedArticle', false);
+				// We want to ask questions
 				updateCurrentState('askQuestions', true);
+				// And we want a new one right now
 				updateCurrentState('switchQuestion', true);
 
 				var currentStateId = stateArray[0];
 				var articleId = states[currentStateId]['article'];
 
+				// TODO: change updateCurrentState to take array of things to change,not
+				// one at a time (also firebase let's us give up multiple things to 
+				// update, so should be taking advantage of that...)
 				updateCurrentState('prompts', articles[articleId]['questions']['prompt']);
 				updateCurrentState('choices', articles[articleId]['questions']['choices']);
 				updateCurrentState('numQuestions', currentState['prompts'].length);
@@ -277,7 +297,7 @@
 				updateCurrentState('loadedAssets', true);
 			}
 			else {
-				//relying on short-circuit evaluation: if we want to load and article and if it hasn't already been loaded, then load
+				//relying on short-circuit evaluation: if we want to load an article and if it hasn't already been loaded, then load
 				if (currentState['loadArticle'] && currentState['loadedArticle'] == false) {
 					var currentStateId = stateArray[0];
 					var articleId = states[currentStateId]['article'];
@@ -303,9 +323,7 @@
 					// catches if user selects form option
 					$('#form input').on('change', function() {
 						console.log("gotit");
-						updateCurrentState('switchQuestion', true);
-						if (currentState['questionsCount'] == currentState['numQuestions']) updateCurrentState('askQuestions', false);
-					    // alert($('input[name=radio]:checked', '#form').val()); 
+						innerStateHandleUserSelection();
 					});
 				}
 			}
