@@ -40,6 +40,7 @@
 		<h1>Viral Resistance</h1>
 		<!-- TODO: we don't handle case where sign in fails -->
 	    <div id="sign-out">Sign Out</div>
+	    <div id="reset">Reset</div>
 		<div id="game"></div>
 		<div id="article">
 			<div id="url-box"> </div>
@@ -140,6 +141,11 @@
 			});
 		};
 
+		reset = function() {
+			updateStateArray([0,1,2,3]);
+			window.location.reload();
+		}
+
 	    var game = new Phaser.Game(1600, 800, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
 	    var databaseLoaded = false;
 
@@ -198,11 +204,22 @@
 			firebase.database().ref().update(updates);
 		}
 
+		function updateStateArray (newStateArray) {
+			// TODO: clean up this function
+			// update variable
+			var newStateArray = arguments[0];
+
+			var updates = {};
+			updates['/users/' + uid + '/stateArray/'] = newStateArray;
+			firebase.database().ref().update(updates);
+		}
+
 		function nextState() {
 			//update stateArray(remove element at index 0)
 			stateArray.splice(0,1);
+			updateStateArray(stateArray);
 			//clear current state and set loadedAssets to false
-			currentState = {loadedAssets: false};
+			updateCurrentState('loadedAssets', false);
 		}
 
 		function handleStart() {
@@ -216,7 +233,6 @@
 
 		function handleOuter() {
 			if (currentState['loadedAssets'] == false) {
-				console.log("loading assets for outer");
 				var nextButton = game.add.button(0, 50, 'nextButton', nextState, this);
 				nextButton.scale.setTo(.2, .2);
 
@@ -363,6 +379,11 @@
 		var signOutButton = document.getElementById('sign-out');
 		signOutButton.style.cursor = 'pointer';
 		signOutButton.onclick = signOut;
+
+		//Reset stateArray to [0,1,2,3]
+		var resetButton = document.getElementById('reset');
+		resetButton.style.cursor = 'pointer';
+		resetButton.onclick = reset;
 
 	    window.addEventListener('load', function() {
 	        initApp()
