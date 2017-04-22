@@ -62,8 +62,8 @@
 		var states;  //defined in initApp, pulled from database
 
 		// These variables define a player's view of the game
-		var stateArray; //defined in initApp, either pulled from database or set to  [0, 1, 2, 3] (for new players)
-		var initialState = [0,1,2,3];
+		var stateArray; //defined in initApp, either pulled from database or set to  initialState (for new players)
+		var initialState = [0,1,4,5];
 		var currentState; //defined in initApp, either pulled from database or set to {loadedAssets:false} (for new players)
 		var score; //defined in initApp, either pulled from database or set to 0 (for new players)
 		// TODO: implement evidence and leads
@@ -191,6 +191,11 @@
 					handleInner();
 				}
 
+				if (currentStateType == 'complexInner') {
+					console.log("In Complex Inner Loop!");
+					handleComplexInner();
+				}
+
 				if (currentStateType == 'end') {
 					console.log("Finished!");
 					handleEnd();
@@ -271,7 +276,42 @@
 		}
 
 		function handleComplexInner() {
+			if (currentState['loadedAssets'] == false) {
 
+				var nextButton = game.add.button(0, 50, 'nextButton', nextState, this);
+				nextButton.scale.setTo(.2, .2);
+
+				// Note that if we don't want to load article (or ask questions, etc) immediately or at all we can definitely do that
+				// Just add a variable in database, and act different based on it
+
+				// We want to load an article
+				updateCurrentState('loadArticle', true);
+				// But we haven't yet
+				updateCurrentState('loadedArticle', false);
+				// We want to ask questions
+				updateCurrentState('askQuestions', true);
+				// And we want a new one right now
+				updateCurrentState('switchQuestion', true);			
+
+				updateCurrentState('loadedAssets', true);
+			}
+			else {
+				//relying on short-circuit evaluation: if we want to load an article and if it hasn't already been loaded, then load
+				if (currentState['loadArticle'] && currentState['loadedArticle'] == false) {
+					var currentStateId = stateArray[0];
+					var articleId = states[currentStateId]['article'];
+					var templateUsed = articles[articleId]['template']['num'];
+					if (templateUsed == 0) loadTemplate0();
+					else if (templateUsed == 1) loadTemplate1();
+					updateCurrentState('loadedArticle', true);
+				}
+
+				// Once user choice detected, switchQuestion because true again. 
+				// Once submit button is clicked, askQuestions becomes false 
+				if (currentState['askQuestions'] && currentState['switchQuestion']) {
+
+				}
+			}
 		}
 
 		function handleInner() {
@@ -358,8 +398,6 @@
 			});
 		}
 
-		// TODO: these functions can be generalized to handle multiple template types, not multiple
-		// specific templates
 		function loadTemplate1() {
 			var article = document.getElementById('article');
 			article.style.display = 'block';
@@ -371,6 +409,13 @@
 			var authorInfoText = articles[3]['template']['author']
 			var authorInfoNode = document.getElementById('author-info');
 			authorInfoNode.innerHTML = authorInfoText;
+
+			var authorPicture = document.getElementById('author-picture');
+			var quote = document.getElementById('quote');
+			var headerImage = document.getElementById('header-image');
+			authorPicture.style.display = 'none';
+			quote.style.display = 'none';
+			headerImage.style.display = 'none';
 
 			var allLinks = article.getElementsByTagName('a');
 

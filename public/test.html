@@ -20,13 +20,9 @@
 		</div>
 
 		<script type="text/javascript">
-			console.log("here");
-			// Select all links
-			// TODO: change this to just article links by selecting article element
-			var article = document.getElementById('thing');
-			console.log(article);
+			// Select all links in article
+			var article = document.getElementById('article');
 			var allLinks = article.getElementsByTagName('a');
-			console.log(allLinks);
 
 			// Bind the event handler to each link individually
 			for (var i = 0, n = allLinks.length; i < n; i++) {

@@ -4,7 +4,7 @@ A person’s view in the game is defined by
 	values of global variables 
 
 MUST BE MAINTAINED IN DATABASE
-	if (state object &&have type: inner) musthave article: INT
+	if (state object && have type: inner or type complexInner) musthave article: INT
 	when transitioning to new state, always set loadedAssets = false 
 	after loadedAssets is set to true, variables like switchQuestion, loadedArticle need to be defined in currentState, and will
 		be cased on (so they must exist!!!)
