@@ -1,0 +1,43 @@
+<!doctype html> 
+<html lang="en"> 
+	<head> 
+		<meta charset="UTF-8" />
+	    <title>Bird Game</title>
+
+	    <!-- Style for some DOM elements -->
+	    <link rel="stylesheet" type="text/css" href="style.css"/>
+
+	    <!-- Style via SCSS, mainly for form rn -->
+	    <link rel="stylesheet" type="text/css" href="output.css"/>
+
+		<!-- Needed for form detection of which radio button is clicked-->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	</head>
+	<body>
+		<div id="thing">
+			<a id="0" href="#">Don Guile</a>
+			<a id="1" href="#">Poll</a>
+		</div>
+
+		<script type="text/javascript">
+			console.log("here");
+			// Select all links
+			// TODO: change this to just article links by selecting article element
+			var article = document.getElementById('thing');
+			console.log(article);
+			var allLinks = article.getElementsByTagName('a');
+			console.log(allLinks);
+
+			// Bind the event handler to each link individually
+			for (var i = 0, n = allLinks.length; i < n; i++) {
+			    allLinks[i].onclick = function () {
+			    	// alert("hello");
+			    	console.log("clicked!");
+			        var id = $(this).attr('id');
+			        console.log("id is: " + id);            
+			    };
+			}
+
+		</script>
+	</body>
+</html>
