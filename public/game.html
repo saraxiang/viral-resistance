@@ -73,6 +73,8 @@
 
 		// This will be defined by handleOuter() and destroyed by nextStateAndDeleteOuter
 		var outerImage;
+		// This will be defined by complexInnerStateHandleLinkSelection, and cleared when a leaf node is reached by handleComplexInner
+		var CINodes;
 		// initApp gets user score, uid, stateArray, currentState from database, or initializes for new users
 		// displays score, logs uid
 		// also initializes states and articles variables
@@ -246,13 +248,24 @@
 		}
 
 		// Waiting a bit before handling to let the pretty animation happen
-		async function innerStateHandleUserSelection() {
+		async function innerStateHandleUserFormChoiceSelection() {
 		  await sleep(300);
 		  updateCurrentState('switchQuestion', true);
 		  if (currentState['questionsCount'] == currentState['numQuestions']) {
 		  	updateCurrentState('askQuestions', false);
 		  	deleteArticleAndForm();
 		  }
+		}
+
+		function complexInnerStateHandleUserFormChoiceSelection() {
+			// flip switchQuestions to true, use the text of the choice to index into next CINode, add to beginning of CINodes array; UNLESS if a choice is "Go Back" or "On Second Thought" then pop off the first element of the CINodes array
+		}
+
+		function complexInnerStateHandleUserLinkSelection(id) {
+			// flip switchQuestions to true, initialize CINodes array
+			updateCurrentState('switchQuestions', true);
+			// CINodes = 
+
 		}
 
 		function handleStart() {
@@ -290,8 +303,8 @@
 				updateCurrentState('loadedArticle', false);
 				// We want to ask questions
 				updateCurrentState('askQuestions', true);
-				// And we want a new one right now
-				updateCurrentState('switchQuestion', true);			
+				// But we don't want to ask one until the user clicks on a link
+				updateCurrentState('switchQuestion', false);			
 
 				updateCurrentState('loadedAssets', true);
 			}
@@ -309,7 +322,11 @@
 				// Once user choice detected, switchQuestion because true again. 
 				// Once submit button is clicked, askQuestions becomes false 
 				if (currentState['askQuestions'] && currentState['switchQuestion']) {
-
+					// CINode will have been updated either by function
+					// complexInnerStateHandleUserLinkSelection (called when new tree is
+					// initialized/new link in article is clicked) or by 
+					// complexInnerStateHandleUserFormChoiceSelection() (called when
+					// user selects choice in a form)
 				}
 			}
 		}
@@ -358,7 +375,7 @@
 				// Once user choice detected, switchQuestion because true again. 
 				// Once submit button is clicked, askQuestions becomes false 
 				if (currentState['askQuestions'] && currentState['switchQuestion']) {
-					loadForm();
+					innerStateLoadForm();
 				}
 			}
 		}
@@ -379,7 +396,7 @@
 			article.style.display = 'none';
 		}
 
-		function loadForm() {
+		function innerStateLoadForm() {
 			var form = document.getElementById('form');
 			var optionsArray = currentState['choices'][currentState['questionsCount']];
 			var optionNum;
@@ -394,14 +411,24 @@
 			// catches if user selects form option
 			$('#form input').on('change', function() {
 				console.log("gotit");
-				innerStateHandleUserSelection();
+				innerStateHandleUserFormChoiceSelection();
 			});
+		}
+
+		function complexInnerStateLoadForm() {
+			// each option in the form needs to pass its text or some other identifying info
+			// to complexInnerStateHandleUserFormChoiceSelection()
 		}
 
 		function loadTemplate1() {
 			var article = document.getElementById('article');
 			article.style.display = 'block';
 
+			// important TODO: here, don't hardcode which article! need to pass in
+			// parameter specifying the article, with the invariant that that article
+			// has corresponding template number, OR better: create a handle load template 
+			// function that just takes in the article id as a parameter and calls 
+			// appropriate load functions
 			var p1Text = articles[3]['template']['p1'];
 			var p1Node = document.getElementById('p1');
 			p1Node.innerHTML = p1Text;
@@ -423,7 +450,8 @@
 			for (var i = 0, n = allLinks.length; i < n; i++) {
 			    allLinks[i].onclick = function () {
 			        var id = $(this).attr('id');
-			        console.log("click detected. id is: " + id);            
+			        console.log("click detected. id is: " + id);
+			        complexInnerStateHandleUserLinkSelection(id);            
 			    };
 			}
 		}
@@ -498,7 +526,7 @@
 		// function noClicked(button) {
 		// 	score = determineScore('fake');
 
-	 //  		updateScore();
+	 	//  		updateScore();
 
 		// 	nextArticle();
 		// }

@@ -9,8 +9,17 @@ MUST BE MAINTAINED IN DATABASE
 	after loadedAssets is set to true, variables like switchQuestion, loadedArticle need to be defined in currentState, and will
 		be cased on (so they must exist!!!)
 
+complexInnerState:
+	article load same as innerState
 
+	default: askQuestions: true, switchQuestions: false
 
+	when link clicked: askQuestions: still true, switchQuestions: true, initialize CINodes array
+	
+	when choice clicked: flip switchQuestions to true, use the text of the choice to index into next CINode, add to beginning of CINodes array; UNLESS if a choice is "Go Back" or "On Second Thought" then pop off the first element of the CINodes array
+	Note that here we can test for value of the node, not whether the name is "On Second Thought" or "Go back"
+
+	when both askQuestions and switchQuestions are true (happens after link clicked, after choice clicked) == based on CINode, update form, flip switchQuestions to false; TEST IF AT LEAF NODE: clear CINodes array to empty, hide form HTML
 
 
 
