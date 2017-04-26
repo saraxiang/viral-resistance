@@ -143,7 +143,16 @@
 
 		reset = function() {
 			updateStateArray(initialState);
+			clearCurrentState();
 			window.location.reload();
+		}
+
+		function clearCurrentState() {
+			currentState = {loadedAssets:false};;
+			var update = {'loadedAssets':false} ;
+			var updates = {};
+			updates['/users/' + uid + '/currentState/'] = update;
+			firebase.database().ref().update(updates);
 		}
 
 		function sleep(ms) {
@@ -194,7 +203,7 @@
 				}
 
 				if (currentStateType == 'complexInner') {
-					console.log("In Complex Inner Loop!");
+					// console.log("In Complex Inner Loop!");
 					handleComplexInner();
 				}
 
@@ -234,7 +243,7 @@
 			stateArray.splice(0,1);
 			updateStateArray(stateArray);
 			//clear current state and set loadedAssets to false
-			updateCurrentState('loadedAssets', false);
+			clearCurrentState();
 		}
 
 		function nextStateAndDeleteOuter() {
@@ -258,14 +267,18 @@
 		}
 
 		function complexInnerStateHandleUserFormChoiceSelection() {
-			// flip switchQuestions to true, use the text of the choice to index into next CINode, add to beginning of CINodes array; UNLESS if a choice is "Go Back" or "On Second Thought" then pop off the first element of the CINodes array
+			// flip switchQuestion to true, use the text of the choice to index into next CINode, add to beginning of CINodes array; UNLESS if a choice is "Go Back" or "On Second Thought" then pop off the first element of the CINodes array
 		}
 
 		function complexInnerStateHandleUserLinkSelection(id) {
-			// flip switchQuestions to true, initialize CINodes array
-			updateCurrentState('switchQuestions', true);
+			// flip switchQuestion to true, initialize CINodes array
+			updateCurrentState('switchQuestion', true);
 			// CINodes = 
-
+			var currentStateId = stateArray[0];
+			var articleId = states[currentStateId]['article'];
+			var treeRoot = articles[articleId]['trees'][id];
+			CINodes = [treeRoot];
+			console.log(CINodes);
 		}
 
 		function handleStart() {
@@ -311,6 +324,8 @@
 			else {
 				//relying on short-circuit evaluation: if we want to load an article and if it hasn't already been loaded, then load
 				if (currentState['loadArticle'] && currentState['loadedArticle'] == false) {
+					// TODO: should not take two lines to get articleId; make 
+					// currentArticleId a global?
 					var currentStateId = stateArray[0];
 					var articleId = states[currentStateId]['article'];
 					var templateUsed = articles[articleId]['template']['num'];
@@ -327,6 +342,7 @@
 					// initialized/new link in article is clicked) or by 
 					// complexInnerStateHandleUserFormChoiceSelection() (called when
 					// user selects choice in a form)
+					complexInnerStateLoadForm();
 				}
 			}
 		}
@@ -418,6 +434,22 @@
 		function complexInnerStateLoadForm() {
 			// each option in the form needs to pass its text or some other identifying info
 			// to complexInnerStateHandleUserFormChoiceSelection()
+			var form = document.getElementById('form');
+			var optionsArray = CINodes[0]['choices'];
+			console.log('optionsArray: ' + optionsArray);
+			var optionNum;
+			var optionsHTML = "";
+			for (optionNum = 0; optionNum < optionsArray.length; optionNum++) {
+				optionsHTML  += '<div class="input-container"><input id="' + optionNum + '" class="radio-button" type="radio" name="radio" value ="' + optionsArray[optionNum]['text'] + '"/><div class="radio-tile"><label for="' + optionNum + '" class="radio-tile-label">' + optionsArray[optionNum]['text'] + '</label></div></div>'
+			}
+		 	form.innerHTML = optionsHTML;
+			updateCurrentState('switchQuestion', false);
+
+			// catches if user selects form option
+			$('#form input').on('change', function() {
+				console.log(this.getAttribute('id'));
+				// innerStateHandleUserFormChoiceSelection();
+			});
 		}
 
 		function loadTemplate1() {
