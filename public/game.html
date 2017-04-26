@@ -56,8 +56,7 @@
 	  	</div>
 
 		<script type="text/javascript">
-		// var switchArticle = true;
-		var uid;
+		var uid;  //user id
 		var articles;  //defined in initApp, pulled from database
 		var states;  //defined in initApp, pulled from database
 
@@ -71,10 +70,14 @@
 		var leads;	//defined in initApp, either pulled from database or set to [] (for new players)
 		// TODO: we will likely need a global "userHistory" variable to hold history for each completed state
 
-		// This will be defined by handleOuter() and destroyed by nextStateAndDeleteOuter
+		// This will be defined by handleOuter() and destroyed by nextStateAfterOuter
 		var outerImage;
 		// This will be defined by complexInnerStateHandleLinkSelection, and cleared when a leaf node is reached by handleComplexInner
 		var CINodes;
+
+		// flipped to true when stateArray and currentState variables are no longer mll
+		var databaseLoaded = false;
+
 		// initApp gets user score, uid, stateArray, currentState from database, or initializes for new users
 		// displays score, logs uid
 		// also initializes states and articles variables
@@ -147,21 +150,13 @@
 			window.location.reload();
 		}
 
-		function clearCurrentState() {
-			currentState = {loadedAssets:false};;
-			var update = {'loadedAssets':false} ;
-			var updates = {};
-			updates['/users/' + uid + '/currentState/'] = update;
-			firebase.database().ref().update(updates);
-		}
-
 		function sleep(ms) {
 		  return new Promise(resolve => setTimeout(resolve, ms));
 		}
 
 	    var game = new Phaser.Game(1600, 800, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
-	    var databaseLoaded = false;
 
+	    // PhaserJS function, preloads assets
 	    function preload() {
 		    // game.load.image('yesButton','assets/yesButton.jpg');
 		    // game.load.image('noButton','assets/noButton.jpg');
@@ -170,10 +165,12 @@
 		    game.load.image('endImage', 'assets/end.jpg');
 		}
 
+		// PhaserJS function, creates game background
 		function create() {
 			game.stage.backgroundColor = '#ADD8E6';
 		}
 
+		// PhaserJS Function, called repeatedly
 		function update() {
 			// checking that database has been accessed and all variables have been filled as needed before proceeding
 			if (!databaseLoaded && stateArray && currentState) {
@@ -214,6 +211,14 @@
 			}
 		}
 
+		function clearCurrentState() {
+			currentState = {loadedAssets:false};;
+			var update = {'loadedAssets':false} ;
+			var updates = {};
+			updates['/users/' + uid + '/currentState/'] = update;
+			firebase.database().ref().update(updates);
+		}
+
 		function updateCurrentState (x, y) {
 			// TODO: clean up this function
 			// update variable
@@ -246,7 +251,8 @@
 			clearCurrentState();
 		}
 
-		function nextStateAndDeleteOuter() {
+		// TODO: nextState function should test for current state, and handle appropriately; shouldn't need this function
+		function nextStateAfterOuter() {
 			//delete...
 			outerImage.destroy();
 			//update stateArray(remove element at index 0)
@@ -256,7 +262,16 @@
 			updateCurrentState('loadedAssets', false);
 		}
 
-		// Waiting a bit before handling to let the pretty animation happen
+		function nextStateAfterComplexInner() {
+			deleteArticleAndForm();
+
+			stateArray.splice(0,1);
+			updateStateArray(stateArray);
+			//clear current state and set loadedAssets to false
+			updateCurrentState('loadedAssets', false);
+		}
+
+		// Waiting a bit before handling to let the pretty animation happen...
 		async function innerStateHandleUserFormChoiceSelection() {
 		  await sleep(300);
 		  updateCurrentState('switchQuestion', true);
@@ -278,7 +293,6 @@
 		function complexInnerStateHandleUserLinkSelection(id) {
 			// flip switchQuestion to true, initialize CINodes array
 			updateCurrentState('switchQuestion', true);
-			// CINodes = 
 			var currentStateId = stateArray[0];
 			var articleId = states[currentStateId]['article'];
 			var treeRoot = articles[articleId]['trees'][id];
@@ -299,7 +313,7 @@
 			if (currentState['loadedAssets'] == false) {
 				outerImage = game.add.sprite(200, 200, 'outerImage');
 
-				var nextButton = game.add.button(0, 50, 'nextButton', nextStateAndDeleteOuter, this);
+				var nextButton = game.add.button(0, 50, 'nextButton', nextStateAfterOuter, this);
 				nextButton.scale.setTo(.2, .2);
 
 				updateCurrentState('loadedAssets', true);
@@ -309,7 +323,7 @@
 		function handleComplexInner() {
 			if (currentState['loadedAssets'] == false) {
 
-				var nextButton = game.add.button(0, 50, 'nextButton', nextState, this);
+				var nextButton = game.add.button(0, 50, 'nextButton', nextStateAfterComplexInner, this);
 				nextButton.scale.setTo(.2, .2);
 
 				// Note that if we don't want to load article (or ask questions, etc) immediately or at all we can definitely do that
