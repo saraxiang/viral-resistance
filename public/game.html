@@ -266,8 +266,13 @@
 		  }
 		}
 
-		function complexInnerStateHandleUserFormChoiceSelection() {
-			// flip switchQuestion to true, use the text of the choice to index into next CINode, add to beginning of CINodes array; UNLESS if a choice is "Go Back" or "On Second Thought" then pop off the first element of the CINodes array
+		function complexInnerStateHandleUserFormChoiceSelection(id) {
+			// flip switchQuestion to true, use the choice to index into next CINode, add to beginning of CINodes array; UNLESS if a choice is "Go Back" or "On Second Thought" then pop off the first element of the CINodes array
+			// TODO: don't just check for content to go back or not
+			updateCurrentState('switchQuestion', true);
+			if (CINodes[0]['choices'][id]['text'] == 'Go back' || CINodes[0]['choices'][id]['text'] == 'On second thought...') CINodes.splice(0,1);
+			else CINodes.unshift(CINodes[0]['choices'][id]);
+			console.log("CINodes is: " + CINodes);
 		}
 
 		function complexInnerStateHandleUserLinkSelection(id) {
@@ -342,7 +347,15 @@
 					// initialized/new link in article is clicked) or by 
 					// complexInnerStateHandleUserFormChoiceSelection() (called when
 					// user selects choice in a form)
-					complexInnerStateLoadForm();
+					updateCurrentState('switchQuestion', false);
+					if (CINodes.length == 0) {
+						form.innerHTML = '';
+					}
+					else if (CINodes[0]['leaf']) {
+						CINodes = [];
+						form.innerHTML = '';
+					}
+					else complexInnerStateLoadForm();
 				}
 			}
 		}
@@ -436,7 +449,6 @@
 			// to complexInnerStateHandleUserFormChoiceSelection()
 			var form = document.getElementById('form');
 			var optionsArray = CINodes[0]['choices'];
-			console.log('optionsArray: ' + optionsArray);
 			var optionNum;
 			var optionsHTML = "";
 			for (optionNum = 0; optionNum < optionsArray.length; optionNum++) {
@@ -447,8 +459,7 @@
 
 			// catches if user selects form option
 			$('#form input').on('change', function() {
-				console.log(this.getAttribute('id'));
-				// innerStateHandleUserFormChoiceSelection();
+				complexInnerStateHandleUserFormChoiceSelection(this.getAttribute('id'));
 			});
 		}
 
