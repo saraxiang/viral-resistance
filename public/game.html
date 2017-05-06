@@ -200,7 +200,7 @@
 				}
 
 				if (currentStateType == 'complexInner') {
-					// console.log("In Complex Inner Loop!");
+					console.log("In Complex Inner Loop!");
 					handleComplexInner();
 				}
 
@@ -348,8 +348,10 @@
 					var currentStateId = stateArray[0];
 					var articleId = states[currentStateId]['article'];
 					var templateUsed = articles[articleId]['template']['num'];
-					if (templateUsed == 0) loadTemplate0();
-					else if (templateUsed == 1) loadTemplate1();
+					console.log("articleID: " + articleId);
+					console.log("templateUsed: " + templateUsed);
+					if (templateUsed == 0) loadTemplate0(articleId);
+					else if (templateUsed == 1) loadTemplate1(articleId);
 					updateCurrentState('loadedArticle', true);
 				}
 
@@ -411,7 +413,7 @@
 					var currentStateId = stateArray[0];
 					var articleId = states[currentStateId]['article'];
 					var templateUsed = articles[articleId]['template']['num'];
-					if (templateUsed == 0) loadTemplate0();
+					if (templateUsed == 0) loadTemplate0(articleId);
 					updateCurrentState('loadedArticle', true);
 				}
 
@@ -477,20 +479,19 @@
 			});
 		}
 
-		function loadTemplate1() {
+		function loadTemplate1(articleId) {
 			var article = document.getElementById('article');
 			article.style.display = 'block';
 
-			// important TODO: here, don't hardcode which article! need to pass in
-			// parameter specifying the article, with the invariant that that article
+			// important TODO: need invariant that article
 			// has corresponding template number, OR better: create a handle load template 
 			// function that just takes in the article id as a parameter and calls 
 			// appropriate load functions
-			var p1Text = articles[3]['template']['p1'];
+			var p1Text = articles[articleId]['template']['p1'];
 			var p1Node = document.getElementById('p1');
 			p1Node.innerHTML = p1Text;
 
-			var authorInfoText = articles[3]['template']['author']
+			var authorInfoText = articles[articleId]['template']['author']
 			var authorInfoNode = document.getElementById('author-info');
 			authorInfoNode.innerHTML = authorInfoText;
 
@@ -513,19 +514,19 @@
 			}
 		}
 
-		function loadTemplate0() {
+		function loadTemplate0(articleId) {
 			var article = document.getElementById('article');
 			article.style.display = 'block';
 
-			var p1Text = articles[0]['template']['p1'];
+			var p1Text = articles[articleId]['template']['p1'];
 			var p1Node = document.getElementById('p1');
 			p1Node.innerHTML = p1Text;
 
-			var p2Text = articles[0]['template']['p2'];
+			var p2Text = articles[articleId]['template']['p2'];
 			var p2Node = document.getElementById('p2');
 			p2Node.innerHTML = p2Text;
 
-			var authorInfoText = articles[0]['template']['author'] + '<br>' + articles[0]['template']['authorTitle'];
+			var authorInfoText = articles[articleId]['template']['author'] + '<br>' + articles[articleId]['template']['authorTitle'];
 			var authorInfoNode = document.getElementById('author-info');
 			authorInfoNode.innerHTML = authorInfoText;
 			// var headerImageUrl = '<div id="header-image" style="background-image: url("assets/someName.jpg");"></div>'

@@ -22,7 +22,8 @@ complexInnerState:
 	when both askQuestions and switchQuestions are true (happens after link clicked, after choice clicked) == based on CINode, update form, flip switchQuestions to false; TEST IF AT LEAF NODE: clear CINodes array to empty, hide form HTML
 
 
-
+Notes:
+Right now outerImage is a global variable; in the future any images should be contained in currentState
 
 
 
