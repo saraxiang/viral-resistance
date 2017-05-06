@@ -1,3 +1,4 @@
+<!-- TODO: change var to let/const? -->
 <!doctype html> 
 <html lang="en"> 
 	<head> 
@@ -294,6 +295,8 @@
 			var complexInnerDiv = document.createElement("div"); 
 			complexInnerDiv.setAttribute("id", 'complex-inner');
 			complexInnerDiv.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/' + id + '.jpg)';
+
+			// back to article button at the top
 			var backToArticle = document.createElement("div");
 			backToArticle.setAttribute("id", 'back-to-article');
 			backToArticle.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/backToArticle.jpg)';
@@ -302,8 +305,18 @@
 				document.getElementById("complex-inner").remove();
 				document.getElementById('article').style.display = 'block';
 			};
+
+			// the guy in the first panel + the first panel
+			var firstPanel = document.createElement("div"); 
+			firstPanel.setAttribute("id", 'first-panel');
+			var guy = document.createElement("div"); 
+			guy.setAttribute("id", 'guy');
+			guy.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/' + 'guy.jpg)';
+
 			document.getElementById('game').appendChild(complexInnerDiv);
 			document.getElementById('complex-inner').appendChild(backToArticle);
+			document.getElementById('complex-inner').appendChild(firstPanel);
+			document.getElementById('first-panel').appendChild(guy);
 
 			// Hide the article
 			document.getElementById('article').style.display = 'none';
@@ -314,6 +327,9 @@
 			var articleId = states[currentStateId]['article'];
 			var treeRoot = articles[articleId]['trees'][id];
 			CINodes = [treeRoot];
+
+			// set optionNum to 0 (no options have been shown yet)
+			updateCurrentState('optionNum', 0);
 			console.log(CINodes);
 		}
 
@@ -478,23 +494,59 @@
 		}
 
 		function complexInnerStateLoadForm() {
+			// Create new elements for interactions related to this link
+			var prompt = document.createElement("div"); 
+			prompt.setAttribute("id", 'prompt');
+			
+			// backToArticle.style.cursor = 'pointer';
+			// backToArticle.onclick = function() {
+			// 	document.getElementById("complex-inner").remove();
+			// 	document.getElementById('article').style.display = 'block';
+			// };
+
+			var optionsWrapper = document.createElement("div"); 
+			optionsWrapper.setAttribute("id", 'options-wrapper');
+
+			var optionsArray = CINodes[0]['choices'];
+			var optionNumAtStart = currentState['optionNum'] + 1;
+			var optionsHTML = "";
+			for (num = optionNumAtStart; num < (optionsArray.length + optionNumAtStart); num++) {
+				updateCurrentState('optionNum', num)
+				optionsHTML  += '<div class="option" id="' + num +'">' + optionsArray[num - optionNumAtStart]['text'] + '</div>'
+			}
+
+			document.getElementById('first-panel').appendChild(prompt);
+			document.getElementById("prompt").innerHTML = CINodes[0]['context']['prompt'];
+			document.getElementById("first-panel").appendChild(optionsWrapper);
+			optionsWrapper.innerHTML = optionsHTML;
+
+			for (num = optionNumAtStart; num < (optionsArray.length + optionNumAtStart); num++) {
+				var op = document.getElementById(num);
+				op.style.cursor = 'pointer';
+				op.onclick = function() {
+					var index = parseInt(this.getAttribute('id')) - optionNumAtStart;
+		    		complexInnerStateHandleUserFormChoiceSelection(index);
+				}
+			}
+
+			// TODO: this type of form can be used in other types of states/templates
 			// each option in the form needs to pass its text or some other identifying info
 			// to complexInnerStateHandleUserFormChoiceSelection()
-			var form = document.getElementById('form');
-			var optionsArray = CINodes[0]['choices'];
-			var optionNum;
-			var optionsHTML = "";
-			for (optionNum = 0; optionNum < optionsArray.length; optionNum++) {
-				optionsHTML  += '<div class="input-container"><input id="' + optionNum + '" class="radio-button" type="radio" name="radio" value ="' + optionsArray[optionNum]['text'] + '"/><div class="radio-tile"><label for="' + optionNum + '" class="radio-tile-label">' + optionsArray[optionNum]['text'] + '</label></div></div>'
-			}
-		 	form.innerHTML = optionsHTML;
-			updateCurrentState('switchQuestion', false);
+			// var form = document.getElementById('form');
+			// var optionsArray = CINodes[0]['choices'];
+			// var optionNum;
+			// var optionsHTML = "";
+			// for (optionNum = 0; optionNum < optionsArray.length; optionNum++) {
+			// 	optionsHTML  += '<div class="input-container"><input id="' + optionNum + '" class="radio-button" type="radio" name="radio" value ="' + optionsArray[optionNum]['text'] + '"/><div class="radio-tile"><label for="' + optionNum + '" class="radio-tile-label">' + optionsArray[optionNum]['text'] + '</label></div></div>'
+			// }
+		 	// 	form.innerHTML = optionsHTML;
+			// updateCurrentState('switchQuestion', false);
 
-			// catches if user selects form option
-			$('#form input').on('change', function() {
-				complexInnerStateHandleUserFormChoiceSelection(this.getAttribute('id'));
-			});
-		}
+			// // catches if user selects form option
+			// $('#form input').on('change', function() {
+			// 	complexInnerStateHandleUserFormChoiceSelection(this.getAttribute('id'));
+			// });
+	}
 
 		function loadTemplate1(articleId) {
 			var article = document.getElementById('article');
