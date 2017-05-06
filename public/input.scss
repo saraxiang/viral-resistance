@@ -9,6 +9,66 @@ body {
 
 $primary-color: #079ad9;
 
+p {
+  font-size: 13px;
+}
+
+h3 {
+  font-size: 16px;
+}
+
+#article {
+  position: relative;
+  top: -683px;
+  width: 500px;
+  height: 650px;
+  background-color: grey;
+  display: none;
+}
+
+#form {
+  position: relative;
+  top: -1200px;
+  left: 800px;
+}
+
+#author-picture {
+  float: left; 
+  width: 80px; 
+  height: 80px; 
+  margin: 10px; 
+  background-color: #ff0000;
+}
+
+#quote {
+  float: right; 
+  width: 150px; 
+  height: 150px; 
+  margin: 10px; 
+  background-color: #ff0000;
+}
+
+#url-box, #top-bar, #header-image {
+  width: 100%;
+}
+
+#url-box {
+  height: 20px;
+  background-color: grey;
+}
+
+#top-bar {
+  height: 30px;
+  background-color: black;
+}
+
+#header-image {
+  height: 200px;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-image: url("someName.jpg");
+}
+
 #game {
   position: relative;
 }

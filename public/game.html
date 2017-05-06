@@ -4,10 +4,6 @@
 		<meta charset="UTF-8" />
 	    <title>Bird Game</title>
 
-	    <!-- Style for some DOM elements -->
-	    <link rel="stylesheet" type="text/css" href="style.css"/>
-
-	    <!-- Style via SCSS, mainly for form rn -->
 	    <link rel="stylesheet" type="text/css" href="output.css"/>
 
 	    <!-- Adding Firebase -->
@@ -304,9 +300,13 @@
 			backToArticle.style.cursor = 'pointer';
 			backToArticle.onclick = function() {
 				document.getElementById("complex-inner").remove();
+				document.getElementById('article').style.display = 'block';
 			};
 			document.getElementById('game').appendChild(complexInnerDiv);
 			document.getElementById('complex-inner').appendChild(backToArticle);
+
+			// Hide the article
+			document.getElementById('article').style.display = 'none';
 
 			// flip switchQuestion to true, initialize CINodes array
 			updateCurrentState('switchQuestion', true);
@@ -526,7 +526,7 @@
 			    allLinks[i].onclick = function () {
 			        var id = $(this).attr('id');
 			        console.log("click detected. id is: " + id);
-			        complexInnerStateHandleUserLinkSelection(id);            
+			        complexInnerStateHandleUserLinkSelection(id);      
 			    };
 			}
 		}
