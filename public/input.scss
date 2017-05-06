@@ -9,6 +9,24 @@ body {
 
 $primary-color: #079ad9;
 
+#game {
+  position: relative;
+}
+
+#complex-inner {
+  height: 693px;
+  width: 512px;
+  background-size: cover;
+  position: absolute;
+  top: 0px;
+}
+
+#back-to-article {
+  height:37px;
+  width: 512px;
+  background-size: cover;
+}
+
 .radio-tile-group {
   display: flex;
   flex-direction: column;

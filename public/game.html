@@ -34,10 +34,10 @@
 	</head>
 	<body>
 		<h1>Viral Resistance</h1>
-		<!-- TODO: we don't handle case where sign in fails -->
-	    <div id="sign-out">Sign Out</div>
+		<div id="sign-out">Sign Out</div>
 	    <div id="reset">Reset</div>
 		<div id="game"></div>
+		<!-- TODO: we don't handle case where sign in fails -->
 		<div id="article">
 			<div id="url-box"> </div>
 			<div id="top-bar"> </div>
@@ -154,7 +154,7 @@
 		  return new Promise(resolve => setTimeout(resolve, ms));
 		}
 
-	    var game = new Phaser.Game(1600, 800, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
+	    var game = new Phaser.Game(512, 683, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
 
 	    // PhaserJS function, preloads assets
 	    function preload() {
@@ -291,6 +291,23 @@
 		}
 
 		function complexInnerStateHandleUserLinkSelection(id) {
+			var currentStateId = stateArray[0];
+			var articleId = states[currentStateId]['article'];
+
+			// Create new elements for interactions related to this link
+			var complexInnerDiv = document.createElement("div"); 
+			complexInnerDiv.setAttribute("id", 'complex-inner');
+			complexInnerDiv.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/' + id + '.jpg)';
+			var backToArticle = document.createElement("div");
+			backToArticle.setAttribute("id", 'back-to-article');
+			backToArticle.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/backToArticle.jpg)';
+			backToArticle.style.cursor = 'pointer';
+			backToArticle.onclick = function() {
+				document.getElementById("complex-inner").remove();
+			};
+			document.getElementById('game').appendChild(complexInnerDiv);
+			document.getElementById('complex-inner').appendChild(backToArticle);
+
 			// flip switchQuestion to true, initialize CINodes array
 			updateCurrentState('switchQuestion', true);
 			var currentStateId = stateArray[0];
