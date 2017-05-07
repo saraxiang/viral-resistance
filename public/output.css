@@ -80,6 +80,14 @@ h3 {
   left: 26px;
 }
 
+#sec-panel {
+  width: 463px;
+  height: 188px;
+  position: absolute;
+  top: 472px;
+  left: 26px;
+}
+
 #guy {
   width: 200px;
   height: 168px;
@@ -88,7 +96,7 @@ h3 {
   top: 20px;
 }
 
-#prompt {
+#prompt-first {
   width: 188px;
   font-size: 15px;
   padding: 5px;
@@ -99,7 +107,27 @@ h3 {
   top: 14px;
 }
 
-#options-wrapper {
+#prompt-second {
+  width: 215px;
+  font-size: 15px;
+  padding: 5px;
+  background-color: green;
+  border: 1px solid black;
+  position: absolute;
+  left: 12px;
+  top: 14px;
+}
+
+#prompt-third {
+  width: 200px;
+  font-size: 15px;
+  padding: 5px;
+  position: absolute;
+  left: 257px;
+  top: 8px;
+}
+
+#options-wrapper-first {
   width: 258px;
   position: absolute;
   top: 86px;
@@ -110,11 +138,50 @@ h3 {
   height: 100px;
 }
 
-.option {
+#options-wrapper-second {
+  width: 320px;
+  position: absolute;
+  top: 86px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 100px;
+}
+
+#options-wrapper-third {
+  width: 175px;
+  position: absolute;
+  top: 90px;
+  left: 287px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 100px;
+}
+
+#options-wrapper-first .option {
   padding: 10px 0px;
   background: linear-gradient(to right, white, green)
 }
 
+#options-wrapper-second .option {
+  padding: 10px 0px 10px 20px;
+  background: linear-gradient(to right, green, white)
+}
+
+#options-wrapper-third .option {
+  padding: 10px 0px 10px 20px;
+}
+
+#speech-bubble {
+  background: url('assets/bubble.png');
+  width: 244px;
+  height: 186px;
+  background-size: cover;
+  position: absolute;
+  top: -19px;
+  left: 237px;
+}
 /* CSS for form that isn't currently being used, can be used for a different article template*/
 /*.radio-tile-group {
   display: flex;

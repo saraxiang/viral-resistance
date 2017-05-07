@@ -278,6 +278,7 @@
 		  }
 		}
 
+		// TODO: right now we don't handle user going back and choosing something already chosen, because it was a last minute design change to allow this
 		function complexInnerStateHandleUserFormChoiceSelection(id) {
 			// flip switchQuestion to true, use the choice to index into next CINode, add to beginning of CINodes array; UNLESS if a choice is "Go Back" or "On Second Thought" then pop off the first element of the CINodes array
 			// TODO: don't just check for content to go back or not
@@ -306,16 +307,19 @@
 				document.getElementById('article').style.display = 'block';
 			};
 
-			// the guy in the first panel + the first panel
+			// the guy in the first panel + the panels
 			var firstPanel = document.createElement("div"); 
 			firstPanel.setAttribute("id", 'first-panel');
 			var guy = document.createElement("div"); 
 			guy.setAttribute("id", 'guy');
 			guy.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/' + 'guy.jpg)';
+			var secPanel = document.createElement("div"); 
+			secPanel.setAttribute("id", 'sec-panel');
 
 			document.getElementById('game').appendChild(complexInnerDiv);
 			document.getElementById('complex-inner').appendChild(backToArticle);
 			document.getElementById('complex-inner').appendChild(firstPanel);
+			document.getElementById('complex-inner').appendChild(secPanel);
 			document.getElementById('first-panel').appendChild(guy);
 
 			// Hide the article
@@ -330,6 +334,8 @@
 
 			// set optionNum to 0 (no options have been shown yet)
 			updateCurrentState('optionNum', 0);
+			// set promptNum to 0 (no prompts have been shown yet)
+			updateCurrentState('promptNum', 0);
 			console.log(CINodes);
 		}
 
@@ -397,12 +403,16 @@
 					// complexInnerStateHandleUserFormChoiceSelection() (called when
 					// user selects choice in a form)
 					updateCurrentState('switchQuestion', false);
-					if (CINodes.length == 0) {
-						form.innerHTML = '';
-					}
-					else if (CINodes[0]['leaf']) {
+					// TODO: this is legacy due to design change...
+					// if (CINodes.length == 0) {
+					// 	form.innerHTML = '';
+					// }
+					if (CINodes[0]['leaf']) {
 						CINodes = [];
-						form.innerHTML = '';
+						document.getElementById("complex-inner").remove();
+						document.getElementById('article').style.display = 'block';
+
+						// form.innerHTML = '';
 					}
 					else complexInnerStateLoadForm();
 				}
@@ -495,29 +505,47 @@
 
 		function complexInnerStateLoadForm() {
 			// Create new elements for interactions related to this link
-			var prompt = document.createElement("div"); 
-			prompt.setAttribute("id", 'prompt');
-			
-			// backToArticle.style.cursor = 'pointer';
-			// backToArticle.onclick = function() {
-			// 	document.getElementById("complex-inner").remove();
-			// 	document.getElementById('article').style.display = 'block';
-			// };
-
+			var promptNum = currentState['promptNum'];
 			var optionsWrapper = document.createElement("div"); 
-			optionsWrapper.setAttribute("id", 'options-wrapper');
+			if (promptNum == 0) optionsWrapper.setAttribute("id", 'options-wrapper-first');
+			else if (promptNum == 1) optionsWrapper.setAttribute("id", 'options-wrapper-second');
+			else if (promptNum == 2) {
+				speechBubble = document.createElement("div"); 
+				speechBubble.setAttribute("id", 'speech-bubble');
+				document.getElementById('sec-panel').appendChild(speechBubble);
+				optionsWrapper.setAttribute("id", 'options-wrapper-third');
+			}
 
 			var optionsArray = CINodes[0]['choices'];
 			var optionNumAtStart = currentState['optionNum'] + 1;
 			var optionsHTML = "";
 			for (num = optionNumAtStart; num < (optionsArray.length + optionNumAtStart); num++) {
-				updateCurrentState('optionNum', num)
+				updateCurrentState('optionNum', num);
 				optionsHTML  += '<div class="option" id="' + num +'">' + optionsArray[num - optionNumAtStart]['text'] + '</div>'
 			}
 
-			document.getElementById('first-panel').appendChild(prompt);
-			document.getElementById("prompt").innerHTML = CINodes[0]['context']['prompt'];
-			document.getElementById("first-panel").appendChild(optionsWrapper);
+			var prompt = document.createElement("div");
+			if (promptNum == 0) {
+				prompt.setAttribute("id", 'prompt-first');
+				document.getElementById('first-panel').appendChild(prompt);
+				document.getElementById("prompt-first").innerHTML = CINodes[0]['context']['prompt'];
+				document.getElementById("first-panel").appendChild(optionsWrapper);
+			}
+			else if (promptNum  == 1) {
+				prompt.setAttribute("id", 'prompt-second');
+				document.getElementById('sec-panel').appendChild(prompt);
+				document.getElementById("prompt-second").innerHTML = CINodes[0]['context']['prompt'];
+				document.getElementById("sec-panel").appendChild(optionsWrapper);
+			}
+			else if (promptNum == 2) {
+				prompt.setAttribute("id", 'prompt-third');
+				document.getElementById('sec-panel').appendChild(prompt);
+				document.getElementById("prompt-third").innerHTML = CINodes[0]['context']['prompt'];
+				document.getElementById("sec-panel").appendChild(optionsWrapper);
+			}
+
+			console.log("optionsHTML: " + optionsHTML);
+			
 			optionsWrapper.innerHTML = optionsHTML;
 
 			for (num = optionNumAtStart; num < (optionsArray.length + optionNumAtStart); num++) {
@@ -528,6 +556,8 @@
 		    		complexInnerStateHandleUserFormChoiceSelection(index);
 				}
 			}
+
+			updateCurrentState('promptNum', currentState['promptNum'] + 1); 
 
 			// TODO: this type of form can be used in other types of states/templates
 			// each option in the form needs to pass its text or some other identifying info
