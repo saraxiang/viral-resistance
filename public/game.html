@@ -6,7 +6,7 @@
 	    <title>Bird Game</title>
 
 	    <link rel="stylesheet" type="text/css" href="output.css"/>
-
+	    <link href="https://fonts.googleapis.com/css?family=Amatic+SC" rel="stylesheet">
 	    <!-- Adding Firebase -->
 		<script src="https://www.gstatic.com/firebasejs/3.6.9/firebase.js"></script>
 		<script>
@@ -36,16 +36,18 @@
 		<div id="game"></div>
 		<!-- TODO: we don't handle case where sign in fails -->
 		<div id="article">
-			<div id="url-box"> </div>
-			<div id="top-bar"> </div>
-			<div id="header-image"></div>
 			<div id="body">
-			  <div  id="author-picture"> </div>
+			  <div id="title"></div>
 			  <h3 id="author-info"> 
 			  </h3>
 			  <p id="p1"></p>
-			  <div  id="quote"> </div>
-			  <p id="p2"></p>
+			  <h3 class="article-option"> 
+			  	RESPOND TO JOE
+			  </h3>
+			  <h3 class="article-option"> 
+			  	IGNORE JOE
+			  </h3>
+
 			</div>
 		</div>
 
@@ -59,7 +61,7 @@
 
 		// These variables define a player's view of the game
 		var stateArray; //defined in initApp, either pulled from database or set to  initialState (for new players)
-		var initialState = [0,1,4,5];
+		var initialState = [4];
 		var currentState; //defined in initApp, either pulled from database or set to {loadedAssets:false} (for new players)
 		var score; //defined in initApp, either pulled from database or set to 0 (for new players)
 		// TODO: implement evidence and leads
@@ -164,7 +166,7 @@
 
 		// PhaserJS function, creates game background
 		function create() {
-			game.stage.backgroundColor = '#ADD8E6';
+			game.stage.backgroundColor = '#ffffff';
 		}
 
 		// PhaserJS Function, called repeatedly
@@ -173,7 +175,8 @@
 			if (!databaseLoaded && stateArray && currentState) {
 				currentState['loadedAssets'] = false;
 				databaseLoaded = true;
-				scoreText = game.add.text(16, 16, 'Score: ' + score, { fontSize: '32px', fill: '#000' });
+				// TODO: not needed for demo...
+				// scoreText = game.add.text(16, 16, 'Score: ' + score, { fontSize: '32px', fill: '#000' });
 			}
 			else if (databaseLoaded) { 
 				// TODO: stateArray should never be empty, catch and raise error if this is the case
@@ -289,11 +292,16 @@
 		}
 
 		function complexInnerStateHandleUserLinkSelection(id) {
+			updateCurrentState("linkActive", id);
 			var currentStateId = stateArray[0];
 			var articleId = states[currentStateId]['article'];
 
 			// Create new elements for interactions related to this link
 			var complexInnerDiv = document.createElement("div"); 
+			// TODO: this is to allow last minute CSS hacks...
+			if (id == 0) complexInnerDiv.setAttribute("class", "first-link");
+			if (id == 1) complexInnerDiv.setAttribute("class", "sec-link");
+			if (id == 2) complexInnerDiv.setAttribute("class", "third-link");
 			complexInnerDiv.setAttribute("id", 'complex-inner');
 			complexInnerDiv.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/' + id + '.jpg)';
 
@@ -312,7 +320,9 @@
 			firstPanel.setAttribute("id", 'first-panel');
 			var guy = document.createElement("div"); 
 			guy.setAttribute("id", 'guy');
-			guy.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/' + 'guy.jpg)';
+			if (currentState['linkActive'] != 2) guy.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/' + 'guy.jpg)';
+			else if (currentState['linkActive'] == 2) guy.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/' + 'guy-2.jpg)';
+
 			var secPanel = document.createElement("div"); 
 			secPanel.setAttribute("id", 'sec-panel');
 
@@ -362,8 +372,9 @@
 		function handleComplexInner() {
 			if (currentState['loadedAssets'] == false) {
 
-				var nextButton = game.add.button(0, 50, 'nextButton', nextStateAfterComplexInner, this);
-				nextButton.scale.setTo(.2, .2);
+				// TODO: not needed for demo...
+				// var nextButton = game.add.button(0, 50, 'nextButton', nextStateAfterComplexInner, this);
+				// nextButton.scale.setTo(.2, .2);
 
 				// Note that if we don't want to load article (or ask questions, etc) immediately or at all we can definitely do that
 				// Just add a variable in database, and act different based on it
@@ -508,8 +519,8 @@
 			var promptNum = currentState['promptNum'];
 			var optionsWrapper = document.createElement("div"); 
 			if (promptNum == 0) optionsWrapper.setAttribute("id", 'options-wrapper-first');
-			else if (promptNum == 1) optionsWrapper.setAttribute("id", 'options-wrapper-second');
-			else if (promptNum == 2) {
+			else if (promptNum == 1 && currentState['linkActive'] != 2) optionsWrapper.setAttribute("id", 'options-wrapper-second');
+			else if (currentState['linkActive'] == 2 || promptNum == 2) {
 				speechBubble = document.createElement("div"); 
 				speechBubble.setAttribute("id", 'speech-bubble');
 				document.getElementById('sec-panel').appendChild(speechBubble);
@@ -531,13 +542,13 @@
 				document.getElementById("prompt-first").innerHTML = CINodes[0]['context']['prompt'];
 				document.getElementById("first-panel").appendChild(optionsWrapper);
 			}
-			else if (promptNum  == 1) {
+			else if (promptNum  == 1 && currentState['linkActive'] != 2) {
 				prompt.setAttribute("id", 'prompt-second');
 				document.getElementById('sec-panel').appendChild(prompt);
 				document.getElementById("prompt-second").innerHTML = CINodes[0]['context']['prompt'];
 				document.getElementById("sec-panel").appendChild(optionsWrapper);
 			}
-			else if (promptNum == 2) {
+			else if (currentState['linkActive'] == 2 || promptNum == 2) {
 				prompt.setAttribute("id", 'prompt-third');
 				document.getElementById('sec-panel').appendChild(prompt);
 				document.getElementById("prompt-third").innerHTML = CINodes[0]['context']['prompt'];
@@ -552,8 +563,12 @@
 				var op = document.getElementById(num);
 				op.style.cursor = 'pointer';
 				op.onclick = function() {
-					var index = parseInt(this.getAttribute('id')) - optionNumAtStart;
+					var id = this.getAttribute('id');
+					var index = parseInt(id) - optionNumAtStart;
 		    		complexInnerStateHandleUserFormChoiceSelection(index);
+		    		if (optionNumAtStart == 1) document.getElementById(id).style.background = 'linear-gradient(to right, white, green)'; 
+		    		if (optionNumAtStart == 3) document.getElementById(id).style.background = 'linear-gradient(to right, green, white)'; 
+		    		if (currentState['linkActive'] == 2)  document.getElementById(id).style.background = 'linear-gradient(to right, green, white)';
 				}
 			}
 
@@ -592,15 +607,14 @@
 
 			var authorInfoText = articles[articleId]['template']['author']
 			var authorInfoNode = document.getElementById('author-info');
-			authorInfoNode.innerHTML = authorInfoText;
+			authorInfoNode.innerHTML = "By " + authorInfoText;
 
-			var authorPicture = document.getElementById('author-picture');
+			var titleText = articles[articleId]['template']['title']
+			var titleNode = document.getElementById('title');
+			titleNode.innerHTML = titleText;
+			
 			var quote = document.getElementById('quote');
 			var headerImage = document.getElementById('header-image');
-			authorPicture.style.display = 'none';
-			quote.style.display = 'none';
-			headerImage.style.display = 'none';
-
 			var allLinks = article.getElementsByTagName('a');
 
 			// Bind the event handler to each link individually

@@ -1,23 +1,46 @@
 * {
-  box-sizing: border-box;
-  font-family: 'Helvetica Neue', sans-serif; }
+  box-sizing: border-box; }
 
 body {
-  background-color: yellow; }
+  background-color: white;
+  font-family: 'Helvetica Neue', sans-serif; }
 
 p {
-  font-size: 13px; }
+  font-size: 13px;
+  width: 80%;
+  left: 60px;
+  position: relative;
+  top: 97px; }
 
 h3 {
   font-size: 16px; }
 
+.article-option {
+  position: relative;
+  top: 167px;
+  left: 290px;
+  font-family: 'Amatic SC', cursive;
+  font-size: 23px; }
+
 #article {
   position: relative;
   top: -683px;
-  width: 500px;
-  height: 650px;
-  background-color: grey;
-  display: none; }
+  height: 693px;
+  width: 512px;
+  display: none;
+  background-size: cover;
+  background-image: url("assets/complexInner/article.png"); }
+
+#author-info {
+  position: relative;
+  font-size: 16px;
+  top: 96px;
+  left: 62px; }
+
+#title {
+  position: relative;
+  top: 100px;
+  left: 63px; }
 
 #form {
   position: relative;
@@ -63,90 +86,136 @@ h3 {
   width: 512px;
   background-size: cover;
   position: absolute;
-  top: 0px; }
+  top: 0px;
+  font-family: 'Amatic SC', cursive;
+  font-size: 23px; }
 
 #back-to-article {
   height: 37px;
   width: 512px;
-  background-size: cover; 
-}
+  background-size: cover; }
 
 #first-panel {
-  width: 463px;
-  height: 188px;
+  width: 456px;
+  height: 184px;
   background-color: white;
   position: absolute;
   top: 271px;
-  left: 26px;
-}
+  left: 32px; }
 
 #sec-panel {
   width: 463px;
   height: 188px;
   position: absolute;
   top: 472px;
-  left: 26px;
-}
+  left: 26px; }
 
 #guy {
   width: 200px;
-  height: 168px;
+  height: 167px;
   background-size: cover;
   position: absolute;
-  top: 20px;
-}
+  top: 20px; }
+
+.sec-link #guy {
+  top: 18px; }
+
+.third-link #guy {
+  height: 178px;
+  width: 264px;
+  top: 210px; }
 
 #prompt-first {
   width: 188px;
-  font-size: 15px;
   padding: 5px;
   background-color: green;
   border: 1px solid black;
   position: absolute;
-  left: 160px;
-  top: 14px;
-}
+  left: 218px;
+  top: 14px; }
+
+.first-link #prompt-first {
+  width: 215px;
+  top: 7px; }
+
+.sec-link #prompt-first {
+  font-size: 22px;
+  width: 205px; }
+
+.third-link #prompt-first {
+  width: 290px;
+  left: 10px; }
 
 #prompt-second {
-  width: 215px;
-  font-size: 15px;
+  width: 231px;
   padding: 5px;
   background-color: green;
   border: 1px solid black;
   position: absolute;
   left: 12px;
-  top: 14px;
-}
+  top: 14px; }
+
+.first-link #prompt-second {
+  top: 8px; }
+
+.sec-link #prompt-second {
+  width: 244px;
+  font-size: 22px;
+  top: 2px; }
 
 #prompt-third {
   width: 200px;
-  font-size: 15px;
   padding: 5px;
   position: absolute;
   left: 257px;
-  top: 8px;
-}
+  top: 8px; }
+
+.first-link #prompt-third {
+  font-size: 22px;
+  top: 2px; }
+
+.sec-link #prompt-third {
+  width: 219px;
+  top: 0px;
+  font-size: 22px; }
+
+.third-link #prompt-third {
+  top: -3px;
+  width: 228px; }
 
 #options-wrapper-first {
   width: 258px;
   position: absolute;
   top: 86px;
-  left: 205px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  height: 100px;
-}
+  height: 100px; }
+
+.third-link #options-wrapper-first {
+  width: 287px;
+  top: 113px; }
+
+.first-link #options-wrapper-first {
+  left: 212px;
+  width: 245px; }
+
+.sec-link #options-wrapper-first {
+  left: 210px;
+  width: 248px; }
 
 #options-wrapper-second {
-  width: 320px;
+  width: 350px;
   position: absolute;
-  top: 86px;
+  top: 82px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
   height: 100px;
-}
+  left: 5px; }
+
+.first-link #options-wrapper-second {
+  left: 0px; }
 
 #options-wrapper-third {
   width: 175px;
@@ -156,32 +225,29 @@ h3 {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  height: 100px;
-}
+  height: 100px; }
 
 #options-wrapper-first .option {
-  padding: 10px 0px;
-  background: linear-gradient(to right, white, green)
-}
+  padding: 10px 0px; }
+
+.third-link #options-wrapper-first {
+  left: -6px; }
 
 #options-wrapper-second .option {
-  padding: 10px 0px 10px 20px;
-  background: linear-gradient(to right, green, white)
-}
+  padding: 10px 0px 10px 20px; }
 
 #options-wrapper-third .option {
-  padding: 10px 0px 10px 20px;
-}
+  padding: 10px 0px 10px 20px; }
 
 #speech-bubble {
-  background: url('assets/bubble.png');
+  background: url("assets/bubble.png");
   width: 244px;
   height: 186px;
   background-size: cover;
   position: absolute;
   top: -19px;
-  left: 237px;
-}
+  left: 237px; }
+
 /* CSS for form that isn't currently being used, can be used for a different article template*/
 /*.radio-tile-group {
   display: flex;
