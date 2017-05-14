@@ -150,6 +150,11 @@ This is a form that displays questions one after the other on the screen, but ha
   background-color: #079ad9; 
 }
 
+In function to handle user form choice selection, handle the case that user wants to "go back"
+// TODO: don't just check for content to go back or not
+if (CINodes[0]['choices'][id]['text'] == 'Go back' || CINodes[0]['choices'][id]['text'] == 'On second thought...') CINodes.splice(0,1);
+
+Inside a function to generate the form
 //each option in the form needs to pass its text or some other identifying info
 to complexInnerStateHandleUserFormChoiceSelection()
 var form = document.getElementById('form');

@@ -36,6 +36,7 @@
 		<div id="sign-out">Sign Out</div>
 	    <div id="reset">Reset</div>
 		<div id="game"></div>
+		<!-- This is for template 1 - should rename id to article-1 or something -->
 		<div id="article">
 			<div id="body">
 			  <div id="title"></div>
@@ -43,10 +44,10 @@
 			  </h3>
 			  <p id="p1"></p>
 			  <h3 class="article-option"> 
-			  	RESPOND TO JOE
+			  	RESPOND TO JOE <!-- TODO: HARDCODING for DEMO -->
 			  </h3>
 			  <h3 class="article-option"> 
-			  	IGNORE JOE
+			  	IGNORE JOE	<!-- TODO: HARDCODING for DEMO -->
 			  </h3>
 			</div>
 		</div>
@@ -240,20 +241,15 @@
 			if (currentState['loadedAssets'] == false) {
 				var nextButton = game.add.button(0, 50, 'nextButton', nextState, this);
 				nextButton.scale.setTo(.2, .2);
-
 				updateCurrentState('loadedAssets', true);
 			}
 		}
 
 		function handleComplexInner() {
+			// TODO: loadedAssets would probably be more appropriately named "initializedState"
 			if (currentState['loadedAssets'] == false) {
-
-				// TODO: not needed for demo...
-				// var nextButton = game.add.button(0, 50, 'nextButton', nextStateAfterComplexInner, this);
-				// nextButton.scale.setTo(.2, .2);
-
 				// Note that if we don't want to load article (or ask questions, etc) immediately or at all we can definitely do that
-				// Just add a variable in database, and act different based on it
+				// Just add a variable in database, and act different based on that variable
 
 				// We want to load an article
 				updateCurrentState('loadArticle', true);
@@ -281,25 +277,14 @@
 					updateCurrentState('loadedArticle', true);
 				}
 
-				// Once user choice detected, switchQuestion because true again. 
-				// Once submit button is clicked, askQuestions becomes false 
+				// Once user choice detected, switchQuestion because true again.
 				if (currentState['askQuestions'] && currentState['switchQuestion']) {
-					// CINode will have been updated either by function
-					// complexInnerStateHandleUserLinkSelection (called when new tree is
-					// initialized/new link in article is clicked) or by 
-					// complexInnerStateHandleUserFormChoiceSelection() (called when
-					// user selects choice in a form)
+					// CINode will have been updated either by function complexInnerStateHandleUserLinkSelection (called when new tree is initialized/new link in article is clicked) or by complexInnerStateHandleUserFormChoiceSelection() (called when user selects choice in a form)
 					updateCurrentState('switchQuestion', false);
-					// TODO: this is legacy due to design change...
-					// if (CINodes.length == 0) {
-					// 	form.innerHTML = '';
-					// }
 					if (CINodes[0]['leaf']) {
 						CINodes = [];
 						document.getElementById("complex-inner").remove();
 						document.getElementById('article').style.display = 'block';
-
-						// form.innerHTML = '';
 					}
 					else complexInnerStateLoadForm();
 				}
@@ -313,16 +298,16 @@
 				updateCurrentState('loadedAssets', true);
 			}
 		}
-				// TODO: right now we don't handle user going back and choosing something already chosen, because it was a last minute design change to allow this
+
+		// TODO: right now we don't handle user going back and choosing something already chosen, because it was a last minute design change to allow this
 		function complexInnerStateHandleUserFormChoiceSelection(id) {
-			// flip switchQuestion to true, use the choice to index into next CINode, add to beginning of CINodes array; UNLESS if a choice is "Go Back" or "On Second Thought" then pop off the first element of the CINodes array
-			// TODO: don't just check for content to go back or not
+			// flip switchQuestion to true, use the choice to index into next CINode, add to beginning of CINodes array
 			updateCurrentState('switchQuestion', true);
-			if (CINodes[0]['choices'][id]['text'] == 'Go back' || CINodes[0]['choices'][id]['text'] == 'On second thought...') CINodes.splice(0,1);
-			else CINodes.unshift(CINodes[0]['choices'][id]);
+			CINodes.unshift(CINodes[0]['choices'][id]);
 			console.log("CINodes is: " + CINodes);
 		}
 
+		// TODO: HARDCODING FOR DEMO; allowing last minute CSS hacks, and supporting a very specific complexInnerState design...would be better to have separate function to handle this
 		function complexInnerStateHandleUserLinkSelection(id) {
 			updateCurrentState("linkActive", id);
 			var currentStateId = stateArray[0];
@@ -330,7 +315,6 @@
 
 			// Create new elements for interactions related to this link
 			var complexInnerDiv = document.createElement("div"); 
-			// TODO: this is to allow last minute CSS hacks...
 			if (id == 0) complexInnerDiv.setAttribute("class", "first-link");
 			if (id == 1) complexInnerDiv.setAttribute("class", "sec-link");
 			if (id == 2) complexInnerDiv.setAttribute("class", "third-link");
@@ -389,6 +373,7 @@
 			article.style.display = 'none';
 		}
 
+		// TODO: HARDCODING FOR DEMO; need separate function to handle this specific design
 		function complexInnerStateLoadForm() {
 			// Create new elements for interactions related to this link
 			var promptNum = currentState['promptNum'];
@@ -455,9 +440,7 @@
 			article.style.display = 'block';
 
 			// important TODO: need invariant that article
-			// has corresponding template number, OR better: create a handle load template 
-			// function that just takes in the article id as a parameter and calls 
-			// appropriate load functions
+			// has corresponding template number, OR better: create a handle load template function that just takes in the article id as a parameter and calls appropriate load functions
 			var p1Text = articles[articleId]['template']['p1'];
 			var p1Node = document.getElementById('p1');
 			p1Node.innerHTML = p1Text;
@@ -484,6 +467,7 @@
 			}
 		}
 
+		// TODO: this is from first iteration; would be best to initialize separate div with distinct ids and children for this (not same as template 1)
 		function loadTemplate0(articleId) {
 			var article = document.getElementById('article');
 			article.style.display = 'block';
