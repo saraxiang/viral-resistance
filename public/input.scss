@@ -25,6 +25,7 @@ h3 {
   left: 290px;
   font-family: 'Amatic SC', cursive;
   font-size: 23px;
+  cursor: pointer;
 }
 
 #article {
@@ -53,41 +54,58 @@ h3 {
 #form {
   position: relative;
   top: -1200px;
-  left: 800px; }
+  left: 800px; 
+}
 
 #author-picture {
   float: left;
   width: 80px;
   height: 80px;
   margin: 10px;
-  background-color: #ff0000; }
+  background-color: #ff0000; 
+}
 
 #quote {
   float: right;
   width: 150px;
   height: 150px;
   margin: 10px;
-  background-color: #ff0000; }
+  background-color: #ff0000; 
+}
 
 #url-box, #top-bar, #header-image {
-  width: 100%; }
+  width: 100%; 
+}
 
 #url-box {
   height: 20px;
-  background-color: grey; }
+  background-color: grey; 
+}
 
 #top-bar {
   height: 30px;
-  background-color: black; }
+  background-color: black; 
+}
 
 #header-image {
   height: 200px;
   background-size: cover;
   background-repeat: no-repeat;
-  background-image: url("someName.jpg"); }
+  background-image: url("someName.jpg"); 
+}
 
 #game {
-  position: relative; }
+  position: relative; 
+}
+
+#screen {
+  background-color: black; 
+  width: 512px;
+  height: 683px;
+  position: relative; 
+  top: -683px;
+  background-size: cover;
+}
 
 #complex-inner {
   height: 693px;

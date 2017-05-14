@@ -60,7 +60,7 @@
 		// These variables define a player's view of the game
 		var uid;  //user id
 		var stateArray; //defined in initApp, either pulled from database or set to  initialState (for new players)
-		var initialState = [4];
+		var initialState = [6, 4, 7, 8];
 		var currentState; //defined in initApp, either pulled from database or set to {loadedAssets:false} (for new players)
 		var score; //defined in initApp, either pulled from database or set to 0 (for new players)
 
@@ -186,12 +186,16 @@
 			clearCurrentState();
 		}
 		function nextStateAfterComplexInner() {
-			complexInnerStatedeleteArticleAndForm();
-
+			complexInnerStateDeleteArticleAndForm();
 			stateArray.splice(0,1);
 			updateStateArray(stateArray);
-			//clear current state and set loadedAssets to false
-			updateCurrentState('loadedAssets', false);
+			clearCurrentState();
+		}
+		function nextStateAfterLoopingOuter() {
+			document.getElementById("screen").remove();
+			stateArray.splice(0,1);
+			updateStateArray(stateArray);
+			clearCurrentState();
 		}
 
 	    var game = new Phaser.Game(512, 683, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
@@ -225,6 +229,11 @@
 					handleStart();
 				}
 
+				if (currentStateType == 'loopingOuter') {
+					console.log("In Outer Loop - Looping Through Assets!");
+					handleLoopingOuter();
+				}
+
 				if (currentStateType == 'complexInner') {
 					console.log("In Complex Inner Loop!");
 					handleComplexInner();
@@ -242,6 +251,21 @@
 				var nextButton = game.add.button(0, 50, 'nextButton', nextState, this);
 				nextButton.scale.setTo(.2, .2);
 				updateCurrentState('loadedAssets', true);
+			}
+		}
+
+		function handleLoopingOuter() {
+			if (currentState['loadedAssets'] == false) {
+				updateCurrentState('activeImage', 0);
+				var wholeScreen = document.createElement("div"); 
+				wholeScreen.setAttribute("id", "screen");
+				document.getElementById('game').appendChild(wholeScreen);
+				wholeScreen.style.cursor = 'pointer';
+				wholeScreen.onclick = function () {
+			        loopingOuterHandleClick();
+			    };
+			    updateCurrentState('loadedAssets', true);
+			    loopingOuterHandleClick();
 			}
 		}
 
@@ -365,10 +389,8 @@
 			console.log(CINodes);
 		}
 
-		function complexInnerStatedeleteArticleAndForm() {
+		function complexInnerStateDeleteArticleAndForm() {
 			var article = document.getElementById('article');
-			var form = document.getElementById('form');
-			form.innerHTML = '';
 			article.innerHTML = '<div id="url-box"></div><div id="top-bar"> </div><div id="header-image"></div><div id="body"><div  id="author-picture"> </div><h3 id="author-info"> </h3><p id="p1"></p><div  id="quote"> </div><p id="p2"></p></div>'
 			article.style.display = 'none';
 		}
@@ -443,6 +465,21 @@
 			updateCurrentState('promptNum', currentState['promptNum'] + 1); 
 		}
 
+		function loopingOuterHandleClick() {
+			var currentStateId = stateArray[0];
+			var numImages = states[currentStateId]['numImages'];
+			// If there are no more images to display, proceed to next state
+			if (currentState['activeImage'] >= numImages) {
+				nextStateAfterLoopingOuter();
+			}
+			else {
+				// Otherwise, display the image
+				var imageToDisplay = states[currentStateId]['imageNames'][currentState['activeImage']];
+				document.getElementById('screen').style.backgroundImage = 'url(assets/' + imageToDisplay;
+				updateCurrentState('activeImage', currentState['activeImage'] + 1);
+			}
+		}
+
 		function loadTemplate1(articleId) {
 			var article = document.getElementById('article');
 			article.style.display = 'block';
@@ -461,7 +498,13 @@
 			var titleNode = document.getElementById('title');
 			titleNode.innerHTML = titleText;
 			
-			var quote = document.getElementById('quote');
+			var options = document.getElementsByClassName("article-option");
+			for (var i = 0, n = options.length; i < n; i++) {
+				options[i].onclick = function () {
+					console.log("HELOO");
+			        nextStateAfterComplexInner();      
+			    };
+			}
 			var headerImage = document.getElementById('header-image');
 			var allLinks = article.getElementsByTagName('a');
 
