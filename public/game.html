@@ -126,33 +126,78 @@
 			});
 	    };
 
+	    //Sign out button signs user out and redirects to login page
 	    signOut = function() {
 		    firebase.auth().signOut().then(function() {
 		    	window.location.href = "index.html";
 			}, function(error) {
-			  alert("Sign Out Error");
 			  console.error('Sign Out Error', error);
 			});
 		};
+		var signOutButton = document.getElementById('sign-out');
+		signOutButton.style.cursor = 'pointer';
+		signOutButton.onclick = signOut;
 
 		reset = function() {
 			updateStateArray(initialState);
 			clearCurrentState();
 			window.location.reload();
 		}
+		//Reset stateArray to initialState
+		var resetButton = document.getElementById('reset');
+		resetButton.style.cursor = 'pointer';
+		resetButton.onclick = reset;
 
-		function sleep(ms) {
-		  return new Promise(resolve => setTimeout(resolve, ms));
+		function clearCurrentState() {
+			currentState = {loadedAssets:false};;
+			var update = {'loadedAssets':false} ;
+			var updates = {};
+			updates['/users/' + uid + '/currentState/'] = update;
+			firebase.database().ref().update(updates);
+		}
+
+		function updateCurrentState (x, y) {
+			// TODO: clean up this function
+			var key = arguments[0];
+			var value = arguments[1];
+
+			currentState[key] = value;
+			var update = currentState;
+			var updates = {};
+			updates['/users/' + uid + '/currentState/'] = update;
+			firebase.database().ref().update(updates);
+		}
+
+		function updateStateArray (newStateArray) {
+			// TODO: clean up this function
+			var newStateArray = arguments[0];
+			var updates = {};
+			updates['/users/' + uid + '/stateArray/'] = newStateArray;
+			firebase.database().ref().update(updates);
+		}
+
+		// TODO: clean this up; nextState function should test for current state type, and handle appropriately; shouldn't need separate functions for each current state type...
+		function nextState() {
+			//update stateArray(remove element at index 0)
+			stateArray.splice(0,1);
+			updateStateArray(stateArray);
+			//clear current state and set loadedAssets to false
+			clearCurrentState();
+		}
+		function nextStateAfterComplexInner() {
+			complexInnerStatedeleteArticleAndForm();
+
+			stateArray.splice(0,1);
+			updateStateArray(stateArray);
+			//clear current state and set loadedAssets to false
+			updateCurrentState('loadedAssets', false);
 		}
 
 	    var game = new Phaser.Game(512, 683, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
 
 	    // PhaserJS function, preloads assets
 	    function preload() {
-		    // game.load.image('yesButton','assets/yesButton.jpg');
-		    // game.load.image('noButton','assets/noButton.jpg');
 		    game.load.image('nextButton', 'assets/next.png');
-		    game.load.image('outerImage', 'assets/outer.jpg');
 		    game.load.image('endImage', 'assets/end.jpg');
 		}
 
@@ -167,28 +212,16 @@
 			if (!databaseLoaded && stateArray && currentState) {
 				currentState['loadedAssets'] = false;
 				databaseLoaded = true;
-				// TODO: not needed for demo...
+				// TODO: score can be displayed by uncommenting this
 				// scoreText = game.add.text(16, 16, 'Score: ' + score, { fontSize: '32px', fill: '#000' });
 			}
 			else if (databaseLoaded) { 
-				// TODO: stateArray should never be empty, catch and raise error if this is the case
-
 				var currentStateId = stateArray[0];
 				var currentStateType = states[currentStateId]['type'];
 
 				if (currentStateType == 'start') {
 					console.log("Starting!");
 					handleStart();
-				}
-
-				if (currentStateType == 'outer') {
-					console.log("In Outer Loop");
-					handleOuter();
-				}
-
-				if (currentStateType == 'inner') {
-					console.log("In Inner Loop");
-					handleInner();
 				}
 
 				if (currentStateType == 'complexInner') {
@@ -201,144 +234,6 @@
 					handleEnd();
 				}
 			}
-		}
-
-		function clearCurrentState() {
-			currentState = {loadedAssets:false};;
-			var update = {'loadedAssets':false} ;
-			var updates = {};
-			updates['/users/' + uid + '/currentState/'] = update;
-			firebase.database().ref().update(updates);
-		}
-
-		function updateCurrentState (x, y) {
-			// TODO: clean up this function
-			// update variable
-			var key = arguments[0];
-			var value = arguments[1];
-
-			currentState[key] = value;
-			//update database
-			var update = currentState;
-			var updates = {};
-			updates['/users/' + uid + '/currentState/'] = update;
-			firebase.database().ref().update(updates);
-		}
-
-		function updateStateArray (newStateArray) {
-			// TODO: clean up this function
-			// update variable
-			var newStateArray = arguments[0];
-
-			var updates = {};
-			updates['/users/' + uid + '/stateArray/'] = newStateArray;
-			firebase.database().ref().update(updates);
-		}
-
-		function nextState() {
-			//update stateArray(remove element at index 0)
-			stateArray.splice(0,1);
-			updateStateArray(stateArray);
-			//clear current state and set loadedAssets to false
-			clearCurrentState();
-		}
-
-		// TODO: nextState function should test for current state, and handle appropriately; shouldn't need this function
-		function nextStateAfterOuter() {
-			//delete...
-			outerImage.destroy();
-			//update stateArray(remove element at index 0)
-			stateArray.splice(0,1);
-			updateStateArray(stateArray);
-			//clear current state and set loadedAssets to false
-			updateCurrentState('loadedAssets', false);
-		}
-
-		function nextStateAfterComplexInner() {
-			deleteArticleAndForm();
-
-			stateArray.splice(0,1);
-			updateStateArray(stateArray);
-			//clear current state and set loadedAssets to false
-			updateCurrentState('loadedAssets', false);
-		}
-
-		// Waiting a bit before handling to let the pretty animation happen...
-		async function innerStateHandleUserFormChoiceSelection() {
-		  await sleep(300);
-		  updateCurrentState('switchQuestion', true);
-		  if (currentState['questionsCount'] == currentState['numQuestions']) {
-		  	updateCurrentState('askQuestions', false);
-		  	deleteArticleAndForm();
-		  }
-		}
-
-		// TODO: right now we don't handle user going back and choosing something already chosen, because it was a last minute design change to allow this
-		function complexInnerStateHandleUserFormChoiceSelection(id) {
-			// flip switchQuestion to true, use the choice to index into next CINode, add to beginning of CINodes array; UNLESS if a choice is "Go Back" or "On Second Thought" then pop off the first element of the CINodes array
-			// TODO: don't just check for content to go back or not
-			updateCurrentState('switchQuestion', true);
-			if (CINodes[0]['choices'][id]['text'] == 'Go back' || CINodes[0]['choices'][id]['text'] == 'On second thought...') CINodes.splice(0,1);
-			else CINodes.unshift(CINodes[0]['choices'][id]);
-			console.log("CINodes is: " + CINodes);
-		}
-
-		function complexInnerStateHandleUserLinkSelection(id) {
-			updateCurrentState("linkActive", id);
-			var currentStateId = stateArray[0];
-			var articleId = states[currentStateId]['article'];
-
-			// Create new elements for interactions related to this link
-			var complexInnerDiv = document.createElement("div"); 
-			// TODO: this is to allow last minute CSS hacks...
-			if (id == 0) complexInnerDiv.setAttribute("class", "first-link");
-			if (id == 1) complexInnerDiv.setAttribute("class", "sec-link");
-			if (id == 2) complexInnerDiv.setAttribute("class", "third-link");
-			complexInnerDiv.setAttribute("id", 'complex-inner');
-			complexInnerDiv.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/' + id + '.jpg)';
-
-			// back to article button at the top
-			var backToArticle = document.createElement("div");
-			backToArticle.setAttribute("id", 'back-to-article');
-			backToArticle.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/backToArticle.jpg)';
-			backToArticle.style.cursor = 'pointer';
-			backToArticle.onclick = function() {
-				document.getElementById("complex-inner").remove();
-				document.getElementById('article').style.display = 'block';
-			};
-
-			// the guy in the first panel + the panels
-			var firstPanel = document.createElement("div"); 
-			firstPanel.setAttribute("id", 'first-panel');
-			var guy = document.createElement("div"); 
-			guy.setAttribute("id", 'guy');
-			if (currentState['linkActive'] != 2) guy.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/' + 'guy.jpg)';
-			else if (currentState['linkActive'] == 2) guy.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/' + 'guy-2.jpg)';
-
-			var secPanel = document.createElement("div"); 
-			secPanel.setAttribute("id", 'sec-panel');
-
-			document.getElementById('game').appendChild(complexInnerDiv);
-			document.getElementById('complex-inner').appendChild(backToArticle);
-			document.getElementById('complex-inner').appendChild(firstPanel);
-			document.getElementById('complex-inner').appendChild(secPanel);
-			document.getElementById('first-panel').appendChild(guy);
-
-			// Hide the article
-			document.getElementById('article').style.display = 'none';
-
-			// flip switchQuestion to true, initialize CINodes array
-			updateCurrentState('switchQuestion', true);
-			var currentStateId = stateArray[0];
-			var articleId = states[currentStateId]['article'];
-			var treeRoot = articles[articleId]['trees'][id];
-			CINodes = [treeRoot];
-
-			// set optionNum to 0 (no options have been shown yet)
-			updateCurrentState('optionNum', 0);
-			// set promptNum to 0 (no prompts have been shown yet)
-			updateCurrentState('promptNum', 0);
-			console.log(CINodes);
 		}
 
 		function handleStart() {
@@ -411,55 +306,6 @@
 			}
 		}
 
-		function handleInner() {
-			if (currentState['loadedAssets'] == false) {
-
-				var nextButton = game.add.button(0, 50, 'nextButton', nextState, this);
-				nextButton.scale.setTo(.2, .2);
-
-				// Note that if we don't want to load article (or ask questions, etc) immediately or at all we can definitely do that
-				// Just add a variable in database, and act different based on it
-
-				// We want to load an article
-				updateCurrentState('loadArticle', true);
-				// But we haven't yet
-				updateCurrentState('loadedArticle', false);
-				// We want to ask questions
-				updateCurrentState('askQuestions', true);
-				// And we want a new one right now
-				updateCurrentState('switchQuestion', true);
-
-				var currentStateId = stateArray[0];
-				var articleId = states[currentStateId]['article'];
-
-				// TODO: change updateCurrentState to take array of things to change,not
-				// one at a time (also firebase let's us give up multiple things to 
-				// update, so should be taking advantage of that...)
-				updateCurrentState('prompts', articles[articleId]['questions']['prompt']);
-				updateCurrentState('choices', articles[articleId]['questions']['choices']);
-				updateCurrentState('numQuestions', currentState['prompts'].length);
-				updateCurrentState('questionsCount', 0);				
-
-				updateCurrentState('loadedAssets', true);
-			}
-			else {
-				//relying on short-circuit evaluation: if we want to load an article and if it hasn't already been loaded, then load
-				if (currentState['loadArticle'] && currentState['loadedArticle'] == false) {
-					var currentStateId = stateArray[0];
-					var articleId = states[currentStateId]['article'];
-					var templateUsed = articles[articleId]['template']['num'];
-					if (templateUsed == 0) loadTemplate0(articleId);
-					updateCurrentState('loadedArticle', true);
-				}
-
-				// Once user choice detected, switchQuestion because true again. 
-				// Once submit button is clicked, askQuestions becomes false 
-				if (currentState['askQuestions'] && currentState['switchQuestion']) {
-					innerStateLoadForm();
-				}
-			}
-		}
-
 		function handleEnd() {
 			if (currentState['loadedAssets'] == false) {
 				var endImage = game.add.sprite(200, 200, 'endImage');
@@ -467,32 +313,80 @@
 				updateCurrentState('loadedAssets', true);
 			}
 		}
+				// TODO: right now we don't handle user going back and choosing something already chosen, because it was a last minute design change to allow this
+		function complexInnerStateHandleUserFormChoiceSelection(id) {
+			// flip switchQuestion to true, use the choice to index into next CINode, add to beginning of CINodes array; UNLESS if a choice is "Go Back" or "On Second Thought" then pop off the first element of the CINodes array
+			// TODO: don't just check for content to go back or not
+			updateCurrentState('switchQuestion', true);
+			if (CINodes[0]['choices'][id]['text'] == 'Go back' || CINodes[0]['choices'][id]['text'] == 'On second thought...') CINodes.splice(0,1);
+			else CINodes.unshift(CINodes[0]['choices'][id]);
+			console.log("CINodes is: " + CINodes);
+		}
 
-		function deleteArticleAndForm() {
+		function complexInnerStateHandleUserLinkSelection(id) {
+			updateCurrentState("linkActive", id);
+			var currentStateId = stateArray[0];
+			var articleId = states[currentStateId]['article'];
+
+			// Create new elements for interactions related to this link
+			var complexInnerDiv = document.createElement("div"); 
+			// TODO: this is to allow last minute CSS hacks...
+			if (id == 0) complexInnerDiv.setAttribute("class", "first-link");
+			if (id == 1) complexInnerDiv.setAttribute("class", "sec-link");
+			if (id == 2) complexInnerDiv.setAttribute("class", "third-link");
+			complexInnerDiv.setAttribute("id", 'complex-inner');
+			complexInnerDiv.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/' + id + '.jpg)';
+
+			// back to article button at the top
+			var backToArticle = document.createElement("div");
+			backToArticle.setAttribute("id", 'back-to-article');
+			backToArticle.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/backToArticle.jpg)';
+			backToArticle.style.cursor = 'pointer';
+			backToArticle.onclick = function() {
+				document.getElementById("complex-inner").remove();
+				document.getElementById('article').style.display = 'block';
+			};
+
+			// the guy in the first panel + the panels
+			var firstPanel = document.createElement("div"); 
+			firstPanel.setAttribute("id", 'first-panel');
+			var guy = document.createElement("div"); 
+			guy.setAttribute("id", 'guy');
+			if (currentState['linkActive'] != 2) guy.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/' + 'guy.jpg)';
+			else if (currentState['linkActive'] == 2) guy.style.backgroundImage = 'url(assets/complexInner/' + articleId + '/' + 'guy-2.jpg)';
+
+			var secPanel = document.createElement("div"); 
+			secPanel.setAttribute("id", 'sec-panel');
+
+			document.getElementById('game').appendChild(complexInnerDiv);
+			document.getElementById('complex-inner').appendChild(backToArticle);
+			document.getElementById('complex-inner').appendChild(firstPanel);
+			document.getElementById('complex-inner').appendChild(secPanel);
+			document.getElementById('first-panel').appendChild(guy);
+
+			// Hide the article
+			document.getElementById('article').style.display = 'none';
+
+			// flip switchQuestion to true, initialize CINodes array
+			updateCurrentState('switchQuestion', true);
+			var currentStateId = stateArray[0];
+			var articleId = states[currentStateId]['article'];
+			var treeRoot = articles[articleId]['trees'][id];
+			CINodes = [treeRoot];
+
+			// set optionNum to 0 (no options have been shown yet)
+			updateCurrentState('optionNum', 0);
+			// set promptNum to 0 (no prompts have been shown yet)
+			updateCurrentState('promptNum', 0);
+			console.log(CINodes);
+		}
+
+		function complexInnerStatedeleteArticleAndForm() {
 			var article = document.getElementById('article');
 			var form = document.getElementById('form');
 			form.innerHTML = '';
 			article.innerHTML = '<div id="url-box"></div><div id="top-bar"> </div><div id="header-image"></div><div id="body"><div  id="author-picture"> </div><h3 id="author-info"> </h3><p id="p1"></p><div  id="quote"> </div><p id="p2"></p></div>'
 			article.style.display = 'none';
-		}
-
-		function innerStateLoadForm() {
-			var form = document.getElementById('form');
-			var optionsArray = currentState['choices'][currentState['questionsCount']];
-			var optionNum;
-			var optionsHTML = "";
-			for (optionNum = 0; optionNum < optionsArray.length; optionNum++) {
-				optionsHTML  += '<div class="input-container"><input id="' + optionNum + '" class="radio-button" type="radio" name="radio" value ="' + optionsArray[optionNum] + '"/><div class="radio-tile"><label for="' + optionNum + '" class="radio-tile-label">' + optionsArray[optionNum] + '</label></div></div>'
-			}
-		 	form.innerHTML = optionsHTML;
-			updateCurrentState('questionsCount', currentState['questionsCount'] + 1);
-			updateCurrentState('switchQuestion', false);
-
-			// catches if user selects form option
-			$('#form input').on('change', function() {
-				console.log("gotit");
-				innerStateHandleUserFormChoiceSelection();
-			});
 		}
 
 		function complexInnerStateLoadForm() {
@@ -554,25 +448,7 @@
 			}
 
 			updateCurrentState('promptNum', currentState['promptNum'] + 1); 
-
-			// TODO: this type of form can be used in other types of states/templates
-			// each option in the form needs to pass its text or some other identifying info
-			// to complexInnerStateHandleUserFormChoiceSelection()
-			// var form = document.getElementById('form');
-			// var optionsArray = CINodes[0]['choices'];
-			// var optionNum;
-			// var optionsHTML = "";
-			// for (optionNum = 0; optionNum < optionsArray.length; optionNum++) {
-			// 	optionsHTML  += '<div class="input-container"><input id="' + optionNum + '" class="radio-button" type="radio" name="radio" value ="' + optionsArray[optionNum]['text'] + '"/><div class="radio-tile"><label for="' + optionNum + '" class="radio-tile-label">' + optionsArray[optionNum]['text'] + '</label></div></div>'
-			// }
-		 	// 	form.innerHTML = optionsHTML;
-			// updateCurrentState('switchQuestion', false);
-
-			// // catches if user selects form option
-			// $('#form input').on('change', function() {
-			// 	complexInnerStateHandleUserFormChoiceSelection(this.getAttribute('id'));
-			// });
-	}
+		}
 
 		function loadTemplate1(articleId) {
 			var article = document.getElementById('article');
@@ -623,6 +499,8 @@
 			var authorInfoText = articles[articleId]['template']['author'] + '<br>' + articles[articleId]['template']['authorTitle'];
 			var authorInfoNode = document.getElementById('author-info');
 			authorInfoNode.innerHTML = authorInfoText;
+
+			// TODO: ran into bugs trying to load images ... :(
 			// var headerImageUrl = '<div id="header-image" style="background-image: url("assets/someName.jpg");"></div>'
 			// var headerImageUrl = '<div id="header-image" style="height: 200px;background-size: cover;background-repeat: no-repeat;background-image: url("someName.jpg");"></div>';
 			// var headerImageNode = document.getElementById('header-wrapper');
@@ -633,65 +511,6 @@
  			// 	document.body.insertBefore(newDiv, body); 
 			// var i = document.createElement('div');
 		}
-
-		// function determineScore(userChosen) {
-		// 	var correct = articles[0]['answer'];
-		// 	if (correct == 'fake' && userChosen == 'fake') {
-		// 		alert("CORRECT!");
-		// 		return score + 1;
-		// 	}
-		// 	if (correct == 'real' && userChosen == 'real') {
-		// 		alert("CORRECT!");
-		// 		return score + 1;
-		// 	}
-		// 	alert("WRONG!");
-		// 	return score - 1;
-		// }
-
-		// function updateScore() {
-		// 	var newData = {
-		// 		score: score 
-		// 	};
-
-		// 	var updates = {};
-		// 	updates['/users/' + uid] = newData;
-
-		// 	firebase.database().ref().update(updates);
-		// 	scoreText.text = 'Score: ' + score;
-		// }
-
-		// function nextArticle() {
-		// 	var article = document.getElementById('article');
-		// 	article.style.display = 'none';
-		// 	articles.splice(0,1); 
-		// 	switchArticle = true;
-		// }
-
-		// function yesClicked(button) {
-		// 	score = determineScore('real');
-
-		// 	updateScore();
-
-		// 	nextArticle();
-		// }
-
-		// function noClicked(button) {
-		// 	score = determineScore('fake');
-
-	 	//  		updateScore();
-
-		// 	nextArticle();
-		// }
-
-		//Sign out button signs user out and redirects to login page
-		var signOutButton = document.getElementById('sign-out');
-		signOutButton.style.cursor = 'pointer';
-		signOutButton.onclick = signOut;
-
-		//Reset stateArray to initialState
-		var resetButton = document.getElementById('reset');
-		resetButton.style.cursor = 'pointer';
-		resetButton.onclick = reset;
 
 	    window.addEventListener('load', function() {
 	        initApp()
