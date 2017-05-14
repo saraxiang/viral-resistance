@@ -3,14 +3,17 @@
 <html lang="en"> 
 	<head> 
 		<meta charset="UTF-8" />
-	    <title>Bird Game</title>
+	    <title>Viral Resistance</title>
 
+	    <!-- Using Sass; to watch for changes in input.scss use: sass --watch input.scss:output.css -->
 	    <link rel="stylesheet" type="text/css" href="output.css"/>
 	    <link href="https://fonts.googleapis.com/css?family=Amatic+SC" rel="stylesheet">
+
 	    <!-- Adding Firebase -->
 		<script src="https://www.gstatic.com/firebasejs/3.6.9/firebase.js"></script>
+
+		<!-- Initialize Firebase -->
 		<script>
-		  // Initialize Firebase
 		  var config = {
 		    apiKey: "AIzaSyCnGdZV39hgow--2Yev49Fvt3gS_lcMcxs",
 		    authDomain: "birdgame-aea72.firebaseapp.com",
@@ -26,7 +29,6 @@
 		<!-- Game engine -->
 		<script type="text/javascript" src="js/phaser.min.js"></script>
 
-		<!-- Needed for form detection of which radio button is clicked-->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 	</head>
 	<body>
@@ -34,7 +36,6 @@
 		<div id="sign-out">Sign Out</div>
 	    <div id="reset">Reset</div>
 		<div id="game"></div>
-		<!-- TODO: we don't handle case where sign in fails -->
 		<div id="article">
 			<div id="body">
 			  <div id="title"></div>
@@ -47,58 +48,49 @@
 			  <h3 class="article-option"> 
 			  	IGNORE JOE
 			  </h3>
-
 			</div>
 		</div>
 
-		<div id="form" class="radio-tile-group">
-	  	</div>
-
 		<script type="text/javascript">
-		var uid;  //user id
+		// These variables define basic game data
 		var articles;  //defined in initApp, pulled from database
 		var states;  //defined in initApp, pulled from database
 
 		// These variables define a player's view of the game
+		var uid;  //user id
 		var stateArray; //defined in initApp, either pulled from database or set to  initialState (for new players)
 		var initialState = [4];
 		var currentState; //defined in initApp, either pulled from database or set to {loadedAssets:false} (for new players)
 		var score; //defined in initApp, either pulled from database or set to 0 (for new players)
-		// TODO: implement evidence and leads
-		var evidence; //defined in initApp, either pulled from database or set to [] (for new players)
-		var leads;	//defined in initApp, either pulled from database or set to [] (for new players)
-		// TODO: we will likely need a global "userHistory" variable to hold history for each completed state
 
-		// This will be defined by handleOuter() and destroyed by nextStateAfterOuter
-		var outerImage;
-		// This will be defined by complexInnerStateHandleLinkSelection, and cleared when a leaf node is reached by handleComplexInner
-		var CINodes;
+		// These variables are used by specific types of states
+		var CINodes;	// CINodes (ComplexInnerNodes) will be defined by complexInnerStateHandleLinkSelection, and cleared when a leaf node is reached by handleComplexInner
 
-		// flipped to true when stateArray and currentState variables are no longer mll
-		var databaseLoaded = false;
+		// This variable is needed b/c we need to wait for the database contents to be fetched completed before starting the game
+		var databaseLoaded = false; // flipped to true when stateArray and currentState variables are no longer null
 
 		// initApp gets user score, uid, stateArray, currentState from database, or initializes for new users
-		// displays score, logs uid
 		// also initializes states and articles variables
 		initApp = function() {
 	        firebase.auth().onAuthStateChanged(function(user) {
 	          if (user) {
-	            // User is signed in. TODO: how much of this info do we actually need?
-	            var displayName = user.displayName;
-	            var email = user.email;
-	            var emailVerified = user.emailVerified;
-	            var photoURL = user.photoURL;
+	            // User is signed in. 
+	            // Some info that we can use ...
+	            // var displayName = user.displayName;
+	            // var email = user.email;
+	            // var emailVerified = user.emailVerified;
+	            // var photoURL = user.photoURL;
 	            uid = user.uid;
 	            console.log("uid is: " + uid);
 
 	            var providerData = user.providerData;
 	            user.getToken().then(function(accessToken) {
-	              // TODO: clean this code up
+	              // TODO: this code can be cleaned up
 	              // Check if user exists (aka if not first time) 
 	              var usersRef = firebase.database().ref('/users/');
 	              usersRef.once('value').then(function(snapshot) {
 	              	if (snapshot.child(uid).exists()) {
-	              		// User exists, so get score, and set score accordingly
+	              		// User exists
 	              		firebase.database().ref('/users/' + uid).once('value').then(function(snapshot) {
 	              			stateArray = snapshot.val().stateArray;
 	              			currentState = snapshot.val().currentState;
@@ -358,17 +350,6 @@
 			}
 		}
 
-		function handleOuter() {
-			if (currentState['loadedAssets'] == false) {
-				outerImage = game.add.sprite(200, 200, 'outerImage');
-
-				var nextButton = game.add.button(0, 50, 'nextButton', nextStateAfterOuter, this);
-				nextButton.scale.setTo(.2, .2);
-
-				updateCurrentState('loadedAssets', true);
-			}
-		}
-
 		function handleComplexInner() {
 			if (currentState['loadedAssets'] == false) {
 
@@ -566,9 +547,9 @@
 					var id = this.getAttribute('id');
 					var index = parseInt(id) - optionNumAtStart;
 		    		complexInnerStateHandleUserFormChoiceSelection(index);
-		    		if (optionNumAtStart == 1) document.getElementById(id).style.background = 'linear-gradient(to right, white, green)'; 
-		    		if (optionNumAtStart == 3) document.getElementById(id).style.background = 'linear-gradient(to right, green, white)'; 
-		    		if (currentState['linkActive'] == 2)  document.getElementById(id).style.background = 'linear-gradient(to right, green, white)';
+		    		if (optionNumAtStart == 1) document.getElementById(id).style.background = 'linear-gradient(to right, white, #c8e6d6)'; 
+		    		if (optionNumAtStart == 3) document.getElementById(id).style.background = 'linear-gradient(to right, #c8e6d6, white)'; 
+		    		if (currentState['linkActive'] == 2)  document.getElementById(id).style.background = 'linear-gradient(to right, #c8e6d6, white)';
 				}
 			}
 
