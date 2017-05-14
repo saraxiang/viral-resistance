@@ -403,6 +403,7 @@
 				document.getElementById("first-panel").appendChild(optionsWrapper);
 			}
 			else if (promptNum  == 1 && currentState['linkActive'] != 2) {
+				document.getElementById("prompt-first").style.background = "#c8e6d6";
 				prompt.setAttribute("id", 'prompt-second');
 				document.getElementById('sec-panel').appendChild(prompt);
 				document.getElementById("prompt-second").innerHTML = CINodes[0]['context']['prompt'];
@@ -414,6 +415,13 @@
 				document.getElementById("prompt-third").innerHTML = CINodes[0]['context']['prompt'];
 				document.getElementById("sec-panel").appendChild(optionsWrapper);
 			}
+			if (promptNum == 2) {
+				document.getElementById("prompt-second").style.background = "#c8e6d6";
+			}
+			if (promptNum == 1 && currentState['linkActive'] == 2) {
+				document.getElementById("prompt-first").style.background = "#c8e6d6";
+			}
+			
 
 			console.log("optionsHTML: " + optionsHTML);
 			
